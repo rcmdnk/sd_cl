@@ -109,15 +109,15 @@ function cl () { # Change directory to the Last directory {{{
   If there are no arguments, you will move to the last saved directory by sd command
 
   Arguments:
-     -l              Show saved directories
-     -c              Show saved directories and choose a directory
-     -C              Clear directories
-     -n              Move to <number>-th last directory
-     -N              No header for selection window
-     -p              Move to pre-defiend dirctory in $PREDEFDIRFILE
-     -w              Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
-     -v              Move from current directory, like Vim
-     -h              Print this HELP and exit
+     -l          Show saved directories
+     -c          Show saved directories and choose a directory
+     -C          Clear directories
+     -n <number> Move to <number>-th last directory
+     -N          No header for selection window
+     -p          Move to pre-defiend dirctory in $PREDEFDIRFILE
+     -w          Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
+     -v          Move from current directory, like Vim
+     -h          Print this HELP and quit
 "
 
   # Initialize variables
@@ -275,23 +275,23 @@ function cl () { # Change directory to the Last directory {{{
       if [ $vim -eq 1 ];then
         header=" Current: $(pwd)
  [n]  j(down), [n]k(up), gg(top), G(bottom), [n]gg/G(go to n)
- Ent  er(move), q(exit)
+ Ent  er(move), q(quit)
 "
       elif [ $window -eq 1 ];then
         header=" $ndirs directories in total
  [n]  j(down), [n]k(up), d(delete), p(put to pre-defined)
- gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(exit)
+ gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
  n W  indow Pane Directory
 "
       elif [ $predef -eq 1 ];then
         header=" $ndirs directories in total
  [n]  j(down), [n]k(up), d(delete), gg(top), G(bottom), [n]gg/G(go to n)
- Ent  er(select), q(exit)
+ Ent  er(select), q(quit)
 "
       else
         header=" $ndirs directories in total
  [n]  j(down), [n]k(up), d(delete), p(put to pre-defined)
- gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(exit)
+ gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
 "
       fi
     else

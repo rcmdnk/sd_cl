@@ -53,6 +53,7 @@ function sd () { # Save dir {{{
 
   # Set values
   local ldf=${LASTDIRFILE:-$HOME/.lastDir}
+  touch "$ldf"
   local nld="${NLASTDIR:-20}"
 
   # Set Save Dir
@@ -63,7 +64,6 @@ function sd () { # Save dir {{{
   fi
 
   # Renew last directories
-  touch "$ldf"
   local -a dirs
   dirs=("$curdir")
   while read d;do
@@ -76,6 +76,7 @@ function sd () { # Save dir {{{
   # Store directories
   local i=0
   rm -f "$ldf"
+  touch "$ldf"
   while [ $i -lt $ndirs ] && [ $i -lt $NLASTDIR ];do
     echo "${dirs[$i]}" >> "$ldf"
     i=$((i+1))
@@ -155,6 +156,7 @@ function cl () { # Change directory to the Last directory {{{
   # Use pre-defined directory file
   if [ $predef -eq 1 ];then
     ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
+    touch $ldf
     if [ $choice -eq 0 ] && [ $list -eq 0 ] && [ $nth -eq -1 ] && [ $# -eq 0 ];then
       local ld=$(head -n1 "$ldf"|sed "s|^~|${HOME}|")
       if [ "$ld" != "" ];then
@@ -167,6 +169,7 @@ function cl () { # Change directory to the Last directory {{{
     fi
   elif [ $window -eq 1 ];then
     ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
+    touch $ldf
   fi
 
   # Change to given directory
@@ -594,6 +597,7 @@ if [ $NOCOMPLETION -eq 0 ];then
       else
         return 0
       fi
+      touch $ldf
       IFS=$'\n'
       compadd $(cat $ldf)
       unset IFS
@@ -610,6 +614,7 @@ if [ $NOCOMPLETION -eq 0 ];then
       elif [[ $prev = -w ]];then
         ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
       fi
+      touch $ldf
       IFS=$'\n'
       if [[ "$cur" != -* && ( "$prev" == $1 || "$prev" == -p ) || "$prev" == -w ]];then
         COMPREPLY=($( compgen -W "$(cat $ldf)" -- $cur))

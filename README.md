@@ -98,7 +98,7 @@ If you work w/o `-p` or `-w`, `cl` uses saved (by `sd`) directory list.
 
 If you use `-c`, `cl` starts selection mode. See below demo.
 
-<script type="text/javascript" src="http://asciinema.org/a/6904.js" id="asciicast-6904" async></script>
+> [sd_cl demo in asciinema](http://asciinema.org/a/6904)
 
 In the selection mode, you can use:
 
@@ -197,3 +197,35 @@ Otherwise `sd_cl` execute:
     compinit
 
 If you don't want to wrap `cd` with `pushd`, set `ISCDWRAP` to 0.
+
+
+If you already have wrapper function for `cd` or the setting for `chpwd` at Zsh,
+you should be better to set:
+
+    export ISPOSTCD=0 # Don't do automatic save
+    export ISCDWRAP=0 # Don't wrap for pushd
+
+Otherwise `sd_cl` overwrites these functions.
+
+If you want to have automatic save in GNU screen/tmux with your `cd`/`chpwd`,
+first, set above ISPOSTCD and ISCDWRAP as 0 to disable to wrap in `sd_cl`,
+then call `post_cd` in your `cd` function for Bash like:
+
+    builtin cd "$@"
+    local ret=$?
+    if [ $ret -eq 0 ];then
+      post_cd
+    fi
+    return $ret
+
+or simply call `post_cd` in `chpwd` for Zsh case.
+
+If you want to enable pushd wrap in your `cd` function,
+replace your `builtin(command) cd` command with
+
+    wrap_cd "$@"
+
+i.e., if you want to enable both in Bash, you should replace above `builtin cd "$@"`
+with `wrap_cd "$@"`.
+
+

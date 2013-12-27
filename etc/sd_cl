@@ -154,22 +154,16 @@ function cl () { # Change directory to the Last directory {{{
   OPTIND=$optind_tmp
 
   # Use pre-defined directory file
-  if [ $predef -eq 1 ];then
-    ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
+  if [ $predef -eq 1 ] || [ $window -eq 1 ];then
+    if [ $predef -eq 1 ];then
+      ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
+    elif [ $window -eq 1 ];then
+      ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
+    fi
     touch $ldf
     if [ $choice -eq 0 ] && [ $list -eq 0 ] && [ $nth -eq -1 ] && [ $# -eq 0 ];then
-      local ld=$(head -n1 "$ldf"|sed "s|^~|${HOME}|")
-      if [ "$ld" != "" ];then
-        cd "$ld"
-        return 0
-      else
-        echo "There is no saved directory."
-        return 1
-      fi
+      choice=1
     fi
-  elif [ $window -eq 1 ];then
-    ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
-    touch $ldf
   fi
 
   # Change to given directory
@@ -627,61 +621,51 @@ fi
 # }}}
 
 # function for post cd in screen or tmux{{{
-function post_cd () {
-  :
-}
-if [ $ISPOSTCD -eq 1 ];then
-  if [ -n "$STY" ];then
-    function post_cd () {
-      local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
-      touch $wdf
-      if grep -q "^$WINDOW 0 " "$wdf";then
-        sed "s|^$WINDOW 0 .*$|$WINDOW 0 $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
-        mv "${wdf}.tmp" ${wdf}
-      else
-        (cat "$wdf" && echo "$WINDOW 0 $(pwd)")|sort > "${wdf}.tmp"
-        mv "${wdf}.tmp" ${wdf}
-      fi
-    }
-  elif [ -n "$TMUX" ];then
-    function post_cd () {
-      local window="$(tmux display -p '#I')"
-      local pane="$(tmux display -p '#P')"
-      local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
-      touch $wdf
-      if grep -q "^$window $pane " "$wdf";then
-        sed "s|^$window $pane .*$|$window $pane $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
-        mv "${wdf}.tmp" ${wdf}
-      else
-        (cat "$wdf" && echo "$window $pane $(pwd)")|sort > "${wdf}.tmp"
-        mv "${wdf}.tmp" ${wdf}
-      fi
-    }
-  fi
+if [ -n "$STY" ];then
+  function post_cd () {
+    local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
+    touch $wdf
+    if grep -q "^$WINDOW 0 " "$wdf";then
+      sed "s|^$WINDOW 0 .*$|$WINDOW 0 $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
+      mv "${wdf}.tmp" ${wdf}
+    else
+      (cat "$wdf" && echo "$WINDOW 0 $(pwd)")|sort > "${wdf}.tmp"
+      mv "${wdf}.tmp" ${wdf}
+    fi
+  }
+elif [ -n "$TMUX" ];then
+  function post_cd () {
+    local window="$(tmux display -p '#I')"
+    local pane="$(tmux display -p '#P')"
+    local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
+    touch $wdf
+    if grep -q "^$window $pane " "$wdf";then
+      sed "s|^$window $pane .*$|$window $pane $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
+      mv "${wdf}.tmp" ${wdf}
+    else
+      (cat "$wdf" && echo "$window $pane $(pwd)")|sort > "${wdf}.tmp"
+      mv "${wdf}.tmp" ${wdf}
+    fi
+  }
 fi
 # }}}
 
 # function for cd wrap to pushd/popd {{{
 function wrap_cd () {
-  builtin cd "$@"
+  if [ $# = 0 ];then
+    builtin cd
+  elif [ "$1" = "-" ];then
+    local opwd=$OLDPWD
+    pushd . >/dev/null
+    builtin cd $opwd
+  elif [ -f "$1" ];then
+    pushd . >/dev/null
+    builtin cd $(dirname "$@")
+  else
+    pushd . >/dev/null
+    builtin cd "$@"
+  fi
 }
-if [ $ISCDWRAP -eq 1 ];then
-  function wrap_cd () {
-    if [ $# = 0 ];then
-      builtin cd
-    elif [ "$1" = "-" ];then
-      local opwd=$OLDPWD
-      pushd . >/dev/null
-      builtin cd $opwd
-    elif [ -f "$1" ];then
-      pushd . >/dev/null
-      builtin cd $(dirname "$@")
-    else
-      pushd . >/dev/null
-      builtin cd "$@"
-    fi
-  }
-fi
 
 # Alias for popd
 alias bd="popd >/dev/null"
@@ -700,7 +684,7 @@ if [ "$ZSH_VERSION" != "" ];then
     }
   fi
 else
-  if [ $ISPOSTCD -eq 1 ] || [ $ISCDWRAP -eq 1 ];then
+  if [ $ISPOSTCD -eq 1 ] && [ $ISCDWRAP -eq 1 ];then
     function cd () {
       wrap_cd "$@"
       local ret=$?
@@ -708,6 +692,19 @@ else
         post_cd
       fi
       return $ret
+    }
+  elif [ $ISPOSTCD -eq 1 ];then
+    function cd () {
+      builtin cd "$@"
+      local ret=$?
+      if [ $ret -eq 0 ];then
+        post_cd
+      fi
+      return $ret
+    }
+  elif [ $ISCDWRAP -eq 1 ];then
+    function cd () {
+      wrap_cd "$@"
     }
   fi
 fi

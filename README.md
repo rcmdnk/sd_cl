@@ -11,6 +11,7 @@ then, call it from your `.bashrc` or `.zshrc` like
     source /path/to/sd_cl
 
 ## curl
+
 You can use an install script on the web like:
 
     $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install/install.sh| sh
@@ -48,6 +49,7 @@ and do `brewall install`, you will have all useful scripts in
 This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 
 ## Download
+
 Or, simply download scripts and set where you like.
 
 

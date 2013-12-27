@@ -229,3 +229,6 @@ i.e., if you want to enable both in Bash, you should replace above `builtin cd "
 with `wrap_cd "$@"`.
 
 
+# References
+
+* [ターミナルでのディレクトリ移動を保存、取り出しする](http://rcmdnk.github.io/blog/2013/12/27/computer-bash-zsh-sd-cl/)

@@ -707,3 +707,10 @@ else
   fi
 fi
 # }}}
+
+# Move to actual pwd {{{
+function cdpwd () {
+  cd -P .
+}
+# }}}
+

@@ -271,23 +271,23 @@ function cl () { # Change directory to the Last directory {{{
     if [ $noheader -eq 0 ];then
       if [ $vim -eq 1 ];then
         header=" Current: $(pwd)
- [n]  j(down), [n]k(up), gg(top), G(bottom), [n]gg/G(go to n)
+ [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G(go to n)
  Ent  er(move), q(quit)
 "
       elif [ $window -eq 1 ];then
         header=" $ndirs directories in total
- [n]  j(down), [n]k(up), d(delete), p(put to pre-defined)
+ [n]j(n-down), [n]k(n-up), d(delete), p(put to pre-defined)
  gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
  n W  indow Pane Directory
 "
       elif [ $predef -eq 1 ];then
         header=" $ndirs directories in total
- [n]  j(down), [n]k(up), d(delete), gg(top), G(bottom), [n]gg/G(go to n)
+ [n]j(n-down), [n]k(n-up), d(delete), gg(top), G(bottom), [n]gg/G(go to n)
  Ent  er(select), q(quit)
 "
       else
         header=" $ndirs directories in total
- [n]  j(down), [n]k(up), d(delete), p(put to pre-defined)
+ [n]j(n-down), [n]k(n-up), d(delete), p(put to pre-defined)
  gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
 "
       fi
@@ -308,14 +308,14 @@ function cl () { # Change directory to the Last directory {{{
   cl_setheader
 
   function cl_printline () {
-    tput cup $(($2)) 0
+    tput cup $2 0
     local i="$(($3+1))"
     if [ $1 -eq 1 ];then
       printf "\e[7m%3d %-${max_width}s %3d\e[m" $i "${dirs_show[$3]}" $i
     else
       printf "%3d %-${max_width}s %3d" $i "${dirs_show[$3]}" $i
     fi
-    tput cup $(($2)) 0
+    tput cup $2 0
   }
 
   function cl_printall () {
@@ -374,9 +374,9 @@ function cl () { # Change directory to the Last directory {{{
             ((n_offset++));((n++))
             cl_printall $n_offset $n
           else
-            cl_printline 0 $((cursor_r)) $n
+            cl_printline 0 $cursor_r $n
             ((cursor_r++));((n++))
-            cl_printline 1 $((cursor_r)) $n
+            cl_printline 1 $cursor_r $n
           fi
         done
         g=0
@@ -389,9 +389,9 @@ function cl () { # Change directory to the Last directory {{{
         fi
         for ((i=0; i<n_move; i++));do
           if [ $cursor_r -ne $ext_row ];then
-            cl_printline 0 $((cursor_r)) $n
+            cl_printline 0 $cursor_r $n
             ((cursor_r--));((n--))
-            cl_printline 1 $((cursor_r)) $n
+            cl_printline 1 $cursor_r $n
           elif [ $n_offset -gt 0 ];then
             ((n_offset--));((n--))
             cl_printall $n_offset $n
@@ -492,6 +492,9 @@ function cl () { # Change directory to the Last directory {{{
         if ! grep -q "^${dirs[$n]}$" "$pdf";then
           echo "${dirs[$n]}" >> "$pdf"
         fi
+        #cl_printline 0 $cursor_r $n
+        #sleep 1
+        #cl_printline 1 $cursor_r $n
         continue
         ;;
       "q" ) break;;

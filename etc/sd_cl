@@ -275,23 +275,23 @@ function cl () { # Change directory to the Last directory {{{
       if [ $vim -eq 1 ];then
         header=" Current: $(pwd)
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G(go to n)
- Ent  er(move), q(quit)
+ Enter(move), q(quit)
 "
       elif [ $window -eq 1 ];then
         header=" $ndirs directories in total
  [n]j(n-down), [n]k(n-up), d(delete), p(put to pre-defined)
- gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
- n W  indow Pane Directory
+ gg(top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
+ n Window Pane Directory
 "
       elif [ $predef -eq 1 ];then
         header=" $ndirs directories in total
  [n]j(n-down), [n]k(n-up), d(delete), gg(top), G(bottom), [n]gg/G(go to n)
- Ent  er(select), q(quit)
+ Enter(select), q(quit)
 "
       else
         header=" $ndirs directories in total
  [n]j(n-down), [n]k(n-up), d(delete), p(put to pre-defined)
- gg(  top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
+ gg(top), G(bottom), [n]gg/G, (go to n), Enter(select), q(quit)
 "
       fi
     else

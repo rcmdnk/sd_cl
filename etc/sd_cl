@@ -98,6 +98,7 @@ function cl () { # Change directory to the Last directory {{{
     local ld=$(head -n1 $ldf)
     if [ "$ld" != "" ];then
       cd "$ld"
+      echo "$ld"
       return 0
     else
       echo "There is no saved directory."
@@ -173,6 +174,7 @@ function cl () { # Change directory to the Last directory {{{
       d=$(grep "^$d" $ldf|head -n1|cut -d' ' -f 3-)
     fi
     cd "${d/#\~/${HOME}}"
+    echo "${d/#\~/${HOME}}"
     return 0
   fi
 
@@ -235,6 +237,7 @@ function cl () { # Change directory to the Last directory {{{
     if [ $predef -ne 1 ];then
       sd "${dirs[$((nth-1))]}"
     fi
+    echo "${dirs[$((nth-1))]}"
     return 0
   fi
 
@@ -353,6 +356,7 @@ function cl () { # Change directory to the Last directory {{{
   local ret=0
   local g=0
   local n_move=0
+  local cdDir=""
   tput cup $cursor_r 0
 
   while : ;do
@@ -505,6 +509,7 @@ function cl () { # Change directory to the Last directory {{{
           d=`sh -c "echo ${dirs[$n]}"`
           if [ -d "${d}" ];then
             cd "${d}"
+            cdDir="${d}"
             if [ $predef -ne 1 ];then
               sd "${d}"
             fi
@@ -514,6 +519,7 @@ function cl () { # Change directory to the Last directory {{{
           break
         fi
         cd "${dirs[$n]}"
+        cdDir="${dirs[$n]}"
         IFS=$'\n'
         dirs=($(ls -d */ 2>/dev/null))
         unset IFS
@@ -559,8 +565,12 @@ function cl () { # Change directory to the Last directory {{{
     echo "${dirs[$n]} doesn't exist"
     return $ret
   fi
-  return $ret
 
+  if [ "$cdDir" != "" ];then
+  echo "$cdDir"
+  fi
+
+  return $ret
 } # }}}
 
 # Completion {{{

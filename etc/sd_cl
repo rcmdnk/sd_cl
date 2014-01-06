@@ -634,6 +634,9 @@ fi
 # }}}
 
 # function for post cd in screen or tmux{{{
+function post_cd () {
+  :
+}
 if [ -n "$STY" ];then
   function post_cd () {
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}

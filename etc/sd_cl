@@ -1,4 +1,4 @@
-#################################################################################
+################################################################################# {{{
 #The MIT License (MIT)
 #
 #Copyright (c) 2013 rcmdnk
@@ -19,8 +19,7 @@
 #COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 #IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#################################################################################
-
+################################################################################# }}}
 
 # Directory store file
 export LASTDIRFILE=${LASTDIRFILE:-$HOME/.lastDir}
@@ -243,13 +242,11 @@ function cl () { # Change directory to the Last directory {{{
 
   # List up
   if [ $list -eq 1 ];then
-    local pager=${PAGER:-less}
-    {
-      local i
-      for ((i=0; i<$ndirs; i++));do
-        printf "%3d %-${max_width}s %3d\n" $((i+1)) "${dirs_show[$i]}" $((i+1))
-      done
-    } | less
+    local i
+    for ((i=0; i<$ndirs; i++));do
+      printf "%3d %-${max_width}s %3d\n" $((i+1)) "${dirs_show[$i]}" $((i+1))
+    done
+    }
     return 0
   fi
 

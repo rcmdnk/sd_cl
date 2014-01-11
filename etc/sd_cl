@@ -246,7 +246,6 @@ function cl () { # Change directory to the Last directory {{{
     for ((i=0; i<$ndirs; i++));do
       printf "%3d %-${max_width}s %3d\n" $((i+1)) "${dirs_show[$i]}" $((i+1))
     done
-    }
     return 0
   fi
 

@@ -38,7 +38,7 @@ export NOCOMPINIT=${NOCOMPLETION:-0}
 # cd wrap to pushd/popd
 export ISCDWRAP=${ISCDWRAP:-1}
 
-function sd () { # Save dir {{{
+sd () { # Save dir {{{
   # Edit predefined dir
   if [ $# -eq 1 ] && [ "$1" = "-e" ];then
     ${EDITOR:-"vim"} ${PREDEFDIRFILE:-$HOME/.predefDir}
@@ -82,7 +82,7 @@ function sd () { # Save dir {{{
   done
 } # }}}
 
-function cl () { # Change directory to the Last directory {{{
+cl () { # Change directory to the Last directory {{{
   # Fix array index for ZSH
   if [ "$ZSH_VERSION" != "" ];then
     setopt localoptions ksharrays
@@ -207,9 +207,10 @@ function cl () { # Change directory to the Last directory {{{
     done < $ldf
     ndirs=${#dirs[@]}
   else
+    local orig_ifs=$IFS
     IFS=$'\n'
     dirs=($(ls -d */ 2>/dev/null))
-    unset IFS
+    IFS=$orig_ifs
     if [ "$(pwd)" != "/" ];then
       dirs=("../" "${dirs[@]}")
     fi
@@ -249,8 +250,22 @@ function cl () { # Change directory to the Last directory {{{
     return 0
   fi
 
+  # On exit
+  _cl_exit () {
+    clear
+
+    # Show cursor
+    tput cnorm 2>/dev/null || tput vs 2>/dev/null
+
+    # Restore display
+    tput rmcup 2>/dev/null || tput te 2>/dev/null
+
+    # Enable echo input
+    stty echo
+  }
+
   # Set trap
-  trap "clear; tput cnorm; stty echo; return 1" 1 2 3 11 15
+  trap "_cl_exit; return 1" 1 2 3 11 15
 
   # Hide cursor
   tput civis 2>/dev/null || tput vi 2>/dev/null
@@ -266,7 +281,7 @@ function cl () { # Change directory to the Last directory {{{
   local ext_row
   local lines
   local max_show
-  function cl_setheader () {
+  cl_setheader () {
     if [ $noheader -eq 0 ];then
       if [ $vim -eq 1 ];then
         header=" Current: $(pwd)
@@ -306,7 +321,7 @@ function cl () { # Change directory to the Last directory {{{
   }
   cl_setheader
 
-  function cl_printline () {
+  cl_printline () {
     tput cup $2 0
     local i="$(($3+1))"
     if [ $1 -eq 1 ];then
@@ -317,7 +332,7 @@ function cl () { # Change directory to the Last directory {{{
     tput cup $2 0
   }
 
-  function cl_printall () {
+  cl_printall () {
     local offset=0
     local select=0
     if [ $# -gt 0 ];then
@@ -516,9 +531,10 @@ function cl () { # Change directory to the Last directory {{{
         fi
         cd "${dirs[$n]}"
         cdDir="${dirs[$n]}"
+        local orig_ifs=$IFS
         IFS=$'\n'
         dirs=($(ls -d */ 2>/dev/null))
-        unset IFS
+        IFS=$orig_ifs
         if [ "$(pwd)" != "/" ];then
           dirs=("../" "${dirs[@]}")
         fi
@@ -546,16 +562,7 @@ function cl () { # Change directory to the Last directory {{{
     esac
   done
 
-  clear
-
-  # Show cursor
-  tput cnorm 2>/dev/null || tput vs 2>/dev/null
-
-  # Restore display
-  tput rmcup 2>/dev/null || tput te 2>/dev/null
-
-  # Enable echo input
-  stty echo
+  _cl_exit
 
   if [ $ret -eq 1 ];then
     echo "${dirs[$n]} doesn't exist"
@@ -601,13 +608,14 @@ if [ $NOCOMPLETION -eq 0 ];then
         return 0
       fi
       touch $ldf
+      local orig_ifs=$IFS
       IFS=$'\n'
       compadd $(cat $ldf)
-      unset IFS
+      IFS=$orig_ifs
     } # }}}
     compdef _cl cl
   elif [ "$BASH_VERSION" != "" ];then
-    function _cl () { # {{{
+    _cl () { # {{{
       COMPREPLY=()
       local cur=${COMP_WORDS[COMP_CWORD]}
       local prev=${COMP_WORDS[COMP_CWORD-1]}
@@ -618,11 +626,12 @@ if [ $NOCOMPLETION -eq 0 ];then
         ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
       fi
       touch $ldf
+      local orig_ifs=$IFS
       IFS=$'\n'
       if [[ "$cur" != -* && ( "$prev" == $1 || "$prev" == -p ) || "$prev" == -w ]];then
         COMPREPLY=($( compgen -W "$(cat $ldf)" -- $cur))
       fi
-      unset IFS
+      IFS=$orig_ifs
     } # }}}
     complete -F _cl cl
   fi
@@ -630,11 +639,11 @@ fi
 # }}}
 
 # function for post cd in screen or tmux{{{
-function post_cd () {
+post_cd () {
   :
 }
 if [ -n "$STY" ];then
-  function post_cd () {
+  post_cd () {
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
     touch $wdf
     if grep -q "^$WINDOW 0 " "$wdf";then
@@ -646,7 +655,7 @@ if [ -n "$STY" ];then
     fi
   }
 elif [ -n "$TMUX" ];then
-  function post_cd () {
+  post_cd () {
     local window="$(tmux display -p '#I')"
     local pane="$(tmux display -p '#P')"
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
@@ -663,7 +672,7 @@ fi
 # }}}
 
 # function for cd wrap to pushd/popd {{{
-function wrap_cd () {
+wrap_cd () {
   if [ $# = 0 ];then
     builtin cd
   elif [ "$1" = "-" ];then
@@ -686,18 +695,18 @@ alias bd="popd >/dev/null"
 # Set cd/chpwd
 if [ "$ZSH_VERSION" != "" ];then
   if [ $ISPOSTCD -eq 1 ];then
-    function chpwd () {
+    chpwd () {
       post_cd
     }
   fi
   if [ $ISCDWRAP -eq 1 ];then
-    function cd () {
+    cd () {
       wrap_cd "$@"
     }
   fi
 else
   if [ $ISPOSTCD -eq 1 ] && [ $ISCDWRAP -eq 1 ];then
-    function cd () {
+    cd () {
       wrap_cd "$@"
       local ret=$?
       if [ $ret -eq 0 ];then
@@ -706,7 +715,7 @@ else
       return $ret
     }
   elif [ $ISPOSTCD -eq 1 ];then
-    function cd () {
+    cd () {
       builtin cd "$@"
       local ret=$?
       if [ $ret -eq 0 ];then
@@ -715,7 +724,7 @@ else
       return $ret
     }
   elif [ $ISCDWRAP -eq 1 ];then
-    function cd () {
+    cd () {
       wrap_cd "$@"
     }
   fi
@@ -723,7 +732,7 @@ fi
 # }}}
 
 # Move to actual pwd {{{
-function cdpwd () {
+cdpwd () {
   cd -P .
 }
 # }}}

@@ -287,27 +287,27 @@ cl () { # Change directory to the Last directory {{{
         header=" Current: $(pwd)
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G(go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
- Enter(move), q(quit)
+ Enter(move), q/Esc(quit)
 "
       elif [ $window -eq 1 ];then
         header=" $ndirs directories in total
  [n]j(n-down), [n]k(n-up), d(delete), p(put to pre-defined)
  gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- Enter(select), q(quit), n Window Pane Directory
+ Enter(select), q/Esc(quit), n Window Pane Directory
 "
       elif [ $predef -eq 1 ];then
         header=" $ndirs directories in total
  [n]j(n-down), [n]k(n-up), d(delete), gg(top), G(bottom), [n]gg/G(go to n)
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- Enter(select), q(quit)
+ Enter(select), q/Esc(quit)
 "
       else
         header=" $ndirs directories in total
  [n]j(n-down), [n]k(n-up), d(delete), p(put to pre-defined),
  gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- Enter(select), q(quit)
+ Enter(select), q/Esc(quit)
 "
       fi
     else
@@ -383,10 +383,10 @@ cl () { # Change directory to the Last directory {{{
       read -s -n 1 c
     fi
     case $c in
-      "j"|$'\004'|$'\006' ) # j/^D/^F
-        if [ $c = $'\004' ];then
+      "j"|$'\x04'|$'\x06' ) # j/^D/^F
+        if [ $c = $'\x04' ];then
           n_move=$((max_show/2))
-        elif [ $c = $'\006' ];then
+        elif [ $c = $'\x06' ];then
           n_move=$((max_show))
         elif [ $n_move -eq 0 ];then
           n_move=1
@@ -416,15 +416,12 @@ cl () { # Change directory to the Last directory {{{
         n_move=0
         continue
         ;;
-      "k"|$'\x15'|$'\002' ) # j/^U/^B
+      "k"|$'\x15'|$'\x02' ) # j/^U/^B
         if [ $c = $'\x15' ];then
           n_move=$((max_show/2))
-        elif [ $c = $'\002' ];then
+        elif [ $c = $'\x02' ];then
           n_move=$((max_show))
         elif [ $n_move -eq 0 ];then
-          n_move=1
-        fi
-        if [ $n_move -eq 0 ];then
           n_move=1
         fi
         local all=0
@@ -543,7 +540,8 @@ cl () { # Change directory to the Last directory {{{
         #cl_printline 1 $cursor_r $n
         continue
         ;;
-      "q" ) break;;
+      "q"|$'\x1b') # q/Esc
+        break;;
       # Choose, for bash|zsh
       ""|"
 ")

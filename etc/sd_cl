@@ -416,7 +416,7 @@ cl () { # Change directory to the Last directory {{{
         n_move=0
         continue
         ;;
-      "k"|$'\x15'|$'\x02' ) # j/^U/^B
+      "k"|$'\x15'|$'\x02' ) # k/^U/^B
         if [ $c = $'\x15' ];then
           n_move=$((max_show/2))
         elif [ $c = $'\x02' ];then

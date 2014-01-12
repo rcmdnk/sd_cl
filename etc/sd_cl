@@ -383,7 +383,7 @@ cl () { # Change directory to the Last directory {{{
       read -s -n 1 c
     fi
     case $c in
-      "j"|$'\x04'|$'\x06' ) # j/^D/^F
+      j|$'\x04'|$'\x06' ) # j/^D/^F
         if [ $c = $'\x04' ];then
           n_move=$((max_show/2))
         elif [ $c = $'\x06' ];then
@@ -416,7 +416,7 @@ cl () { # Change directory to the Last directory {{{
         n_move=0
         continue
         ;;
-      "k"|$'\x15'|$'\x02' ) # k/^U/^B
+      k|$'\x15'|$'\x02' ) # k/^U/^B
         if [ $c = $'\x15' ];then
           n_move=$((max_show/2))
         elif [ $c = $'\x02' ];then
@@ -446,7 +446,7 @@ cl () { # Change directory to the Last directory {{{
         n_move=0
         continue
         ;;
-      "g" )
+      g )
         if [ $g -eq 0 ];then
           g=1
           continue
@@ -475,7 +475,7 @@ cl () { # Change directory to the Last directory {{{
         g=0
         continue
         ;;
-      "G" )
+      G )
         if [ $n_move -eq 0 ];then
           n=$((ndirs-1))
           if [ $n -ge $max_show ];then
@@ -503,7 +503,7 @@ cl () { # Change directory to the Last directory {{{
         n_move=0
         continue
         ;;
-      "d" )
+      d )
         if [ $vim -eq 1 ];then
           continue
         fi
@@ -526,7 +526,7 @@ cl () { # Change directory to the Last directory {{{
         cl_printall $n_offset $n
         continue
         ;;
-      "p" )
+      p )
         if [ $predef -eq 1 ] || [ $vim -eq 1 ];then
           continue
         fi
@@ -540,7 +540,7 @@ cl () { # Change directory to the Last directory {{{
         #cl_printline 1 $cursor_r $n
         continue
         ;;
-      "q"|$'\x1b') # q/Esc
+      q|$'\x1b') # q/Esc
         break;;
       # Choose, for bash|zsh
       ""|"
@@ -584,7 +584,7 @@ cl () { # Change directory to the Last directory {{{
         fi
         continue
         ;;
-      "*" )
+      * )
         g=0
         n_move=0
         continue;;

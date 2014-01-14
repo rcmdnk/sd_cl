@@ -244,7 +244,7 @@ cl () { # Change directory to the Last directory {{{
   # List up
   if [ $list -eq 1 ];then
     local i
-    for ((i=0; i<$ndirs; i++));do
+    for ((i=0; i<ndirs; i++));do
       printf "%3d %-${max_width}s %3d\n" $((i+1)) "${dirs_show[$i]}" $((i+1))
     done
     return 0
@@ -353,7 +353,7 @@ cl () { # Change directory to the Last directory {{{
     echo "$header"
 
     local i
-    for ((i=0; i<$((max_show)); i++));do
+    for ((i=0; i<max_show; i++));do
       if [ $((i+offset)) -eq $select ];then
         cl_printline 1 $((i+ext_row)) $((i+offset))
       else

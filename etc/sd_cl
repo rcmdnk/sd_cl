@@ -41,6 +41,11 @@ export ISCDWRAP=${ISCDWRAP:-1}
 # main function
 _sd_cl () { # {{{
   # source sentaku
+  if ! type sentaku >& /dev/null ;then
+    echo "sd_cl needs sentaku"
+    echo "Please install: https://github.com/rcmdnk/sentaku"
+    return 1
+  fi
   . sentaku -n
 
   # Set values

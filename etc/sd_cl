@@ -67,7 +67,7 @@ _sd_cl () { # {{{
 
     _sf_main -p "$curdir" >/dev/null
     return $?
-  elif [ "$sdcl" != "cd" ];then
+  elif [ "$sdcl" != "cl" ];then
     echo "Usage: _sd_cl <sd or cl> [arg1 [arg2 [...]]]"
     return 1
   fi
@@ -98,7 +98,7 @@ _sd_cl () { # {{{
   local window=0
   local vim=0
   local cleardir=0
-  local dir=0
+  local dir=""
 
   _sf_initialize_user () {
     _s_delete=1
@@ -116,13 +116,14 @@ _sd_cl () { # {{{
         "-v" ) vim=1; predef=0; window=0; _s_delete=0;;
         "-C" ) cleardir=1 ;;
         "-N" ) _s_noheader=1 ;;
+        "-m" ) ;;
         "-h" )
           echo "$_s_help" >/dev/tty
           return 0
           ;;
         * ) dir="$1";break;;
-        shift
       esac
+      shift
     done
 
     # Use pre-defined directory file
@@ -142,8 +143,8 @@ _sd_cl () { # {{{
       if [ $window -eq 1 ];then
         dir=$(grep "^$dir" $_s_file|head -n1|cut -d' ' -f 3-)
       fi
+      echo "cd ${dir}"
       cd "${dir/#\~/${HOME}}"
-      echo "${dir}"
       return 0
     fi
 

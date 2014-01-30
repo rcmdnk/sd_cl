@@ -10,6 +10,12 @@ then, call it from your `.bashrc` or `.zshrc` like
 
     source /path/to/sd_cl
 
+:warning: current version requires [sentaku](https://github.com/rcmdnk/sentaku).
+
+Please install sentaku or use
+[standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
+(standalone version could be obsolete).
+
 ## curl
 
 You can use an install script on the web like:
@@ -44,7 +50,7 @@ Or if you write like:
     tapall 'rcmdnk/rcmdnkpac'
 
 and do `brewall install`, you will have all useful scripts in
-[rcmdnkpac](https://github.com/rcmdnk/homebrew-rcmdnkpac).
+[rcmdnkpac](https://github.com/rcmdnk/homebrew-rcmdnkpac) (including `sentaku`).
 
 This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 

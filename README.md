@@ -16,6 +16,8 @@ Please install sentaku or use
 [standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
 (standalone version could be obsolete).
 
+If you use Homebrew, sentaku also will be installed automatically.
+
 ## curl
 
 You can use an install script on the web like:

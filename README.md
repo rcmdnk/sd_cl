@@ -34,16 +34,9 @@ If you want to install other directory, do like:
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
 
     $ brew tap rcmdnk/rcmdnkpac
-    $ brew install sd_cl --standalone
-
-If you have [brewall](https://github.com/rcmdnk/homebrew-brewall), add following lines to Brewfile:
-
-    tap 'rcmdnk/rcmdnkpac'
-    brew 'sd_cl --standalone'
-
-then, do:
-
-    $ brewall install
+    $ cd $(brew --prefix)/Library/Taps/rcmdnk--rcmdnkpac
+    $ git checkout d85c945 sd_cl.rb # use v0.0.3
+    $ brew install sd_cl
 
 This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 

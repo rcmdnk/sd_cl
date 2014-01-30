@@ -38,63 +38,36 @@ export NOCOMPINIT=${NOCOMPLETION:-0}
 # cd wrap to pushd/popd
 export ISCDWRAP=${ISCDWRAP:-1}
 
+
 sd () { # Save dir {{{
+  # source sentaku
+  . sentaku -n
+
   # Edit predefined dir
   if [ $# -eq 1 ] && [ "$1" = "-e" ];then
     ${EDITOR:-"vim"} ${PREDEFDIRFILE:-$HOME/.predefDir}
     return 0
   fi
 
-  # Fix array index for ZSH
-  if [ "$ZSH_VERSION" != "" ];then
-    setopt localoptions ksharrays
-  fi
-
   # Set values
-  local ldf=${LASTDIRFILE:-$HOME/.lastDir}
-  touch "$ldf"
-  local nld="${NLASTDIR:-20}"
+  local _SENTAKU_INPUT_FILE=${LASTDIRFILE:-$HOME/.lastDir}
+  local _SENTAKU_MAX="${NLASTDIR:-20}"
 
   # Set Save Dir
-  local curdir="$1"
+  local curdir="$*"
   if [ $# -eq 0 ];then
     # Current directory
     curdir=$(pwd -P)
   fi
 
-  # Renew last directories
-  local -a dirs
-  dirs=("$curdir")
-  while read d;do
-    if [ "$d" != "$curdir" ];then
-      dirs=("${dirs[@]}" "$d")
-    fi
-  done < "$ldf"
-  local ndirs=${#dirs[@]}
-
-  # Store directories
-  local i=0
-  rm -f "$ldf"
-  touch "$ldf"
-  while [ $i -lt $ndirs ] && [ $i -lt $NLASTDIR ];do
-    echo "${dirs[$i]}" >> "$ldf"
-    i=$((i+1))
-  done
+  echo "$curdir" | _sf_push
 } # }}}
 
 cl () { # Change directory to the Last directory {{{
-  # Fix array index for ZSH
-  if [ "$ZSH_VERSION" != "" ];then
-    setopt localoptions ksharrays
-  fi
-
-  # Set values
-  local ldf=${LASTDIRFILE:-$HOME/.lastDir}
-  touch $ldf
 
   # Change to the last dir
   if [ $# -eq 0 ];then
-    local ld=$(head -n1 $ldf)
+    local ld=$(head -n1 ${LASTDIRFILE:-$HOME/.lastDir})
     if [ "$ld" != "" ];then
       cd "$ld"
       echo "$ld"
@@ -105,7 +78,15 @@ cl () { # Change directory to the Last directory {{{
     fi
   fi
 
-  local HELP="
+  # source sentaku
+  . sentaku -n
+
+  # Set values
+  local _SENTAKU_INPUT_FILE=${LASTDIRFILE:-$HOME/.lastDir}
+  local _SENTAKU_MAX="${NLASTDIR:-20}"
+
+
+  local _s_help="
   Usage: cl [-lcph] [-n <number> ]
   If there are no arguments, you will move to the last saved directory by sd command
 
@@ -156,11 +137,10 @@ cl () { # Change directory to the Last directory {{{
   # Use pre-defined directory file
   if [ $predef -eq 1 ] || [ $window -eq 1 ];then
     if [ $predef -eq 1 ];then
-      ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
+      _SENTAKU_INPUT_FILE=${PREDEFDIRFILE:-$HOME/.predefDir}
     elif [ $window -eq 1 ];then
-      ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
+      _SENTAKU_INPUT_FILE=${WINDOWDIRFILE:-$HOME/.windowDir}
     fi
-    touch $ldf
     if [ $choice -eq 0 ] && [ $list -eq 0 ] && [ $nth -eq -1 ] && [ $# -eq 0 ];then
       choice=1
     fi

@@ -16,7 +16,7 @@ Please install sentaku or use
 [standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
 (standalone version could be obsolete).
 
-If you use Homebrew, sentaku also will be installed automatically.
+If you use Homebrew to insatll, sentaku will be installed automatically, too.
 
 ## curl
 
@@ -52,7 +52,7 @@ Or if you write like:
     tapall 'rcmdnk/rcmdnkpac'
 
 and do `brewall install`, you will have all useful scripts in
-[rcmdnkpac](https://github.com/rcmdnk/homebrew-rcmdnkpac) (including `sentaku`).
+[rcmdnkpac](https://github.com/rcmdnk/homebrew-rcmdnkpac).
 
 This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 

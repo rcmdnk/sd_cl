@@ -93,7 +93,6 @@ _sd_cl () { # {{{
 
   # Initialize variables
   local list=0
-  local choice=0
   local predef=0
   local window=0
   local vim=0
@@ -109,7 +108,7 @@ _sd_cl () { # {{{
     while [ $# -gt 0 ];do
       case $1 in
         "-l" ) list=1 ;;
-        "-c" ) choice=1 ;;
+        "-c" ) ;;
         "-n" ) _s_current_n="$2" ;shift;;
         "-p" ) predef=1; window=0; vim=0;;
         "-w" ) window=1; predef=0; vim=0;;
@@ -133,9 +132,16 @@ _sd_cl () { # {{{
       elif [ $window -eq 1 ];then
         _s_file=${WINDOWDIRFILE:-$HOME/.windowDir}
       fi
-      if [ $choice -eq 0 ] && [ $list -eq 0 ] && [ $_s_current_n -eq -1 ] && [ "$dir" = "" ];then
-        choice=1
-      fi
+    fi
+
+    # List up
+    if [ $list -eq 1 ];then
+      local i=0
+      while read line;do
+        printf "%3d %s\n" $i "${line}"
+        ((i++))
+      done < $_s_file
+      return 0
     fi
 
     # Change to given directory
@@ -229,7 +235,7 @@ _sd_cl () { # {{{
     fi
   } # }}}
 
-  _sf_main -m
+  _sf_main -m "$@"
 } # }}}
 
 sd () { # Save dir {{{

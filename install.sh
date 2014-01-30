@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 scripts=(https://raw.github.com/rcmdnk/sd_cl/master/etc/sd_cl)
 if [ x"$prefix" = x ];then
   prefix=/usr/local

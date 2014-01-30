@@ -10,41 +10,40 @@ then, call it from your `.bashrc` or `.zshrc` like
 
     source /path/to/sd_cl
 
+:warning: This is standalone version.
+It can be used w/o other script, but this version could be obsolete.
+
+Please use [master version](https://github.com/rcmdnk/sd_cl)
+if you wish to the latest version.
+
 ## curl
 
 You can use an install script on the web like:
 
-    $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install/install.sh| sh
+    $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install_sa/install.sh| sh
 
 This will install scripts to `/usr/etc`
 and you may be asked root password.
 
 If you want to install other directory, do like:
 
-    $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install/install.sh|  prefix=~/usr/local/ sh
+    $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install_sa/install.sh|  prefix=~/usr/local/ sh
 
 ## Homebrew at OS X
 
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
 
     $ brew tap rcmdnk/rcmdnkpac
-    $ brew install sd_cl
+    $ brew install sd_cl --standalone
 
 If you have [brewall](https://github.com/rcmdnk/homebrew-brewall), add following lines to Brewfile:
 
     tap 'rcmdnk/rcmdnkpac'
-    brew 'sd_cl'
+    brew 'sd_cl --standalone'
 
 then, do:
 
     $ brewall install
-
-Or if you write like:
-
-    tapall 'rcmdnk/rcmdnkpac'
-
-and do `brewall install`, you will have all useful scripts in
-[rcmdnkpac](https://github.com/rcmdnk/homebrew-rcmdnkpac).
 
 This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 

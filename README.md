@@ -10,7 +10,7 @@ then, call it from your `.bashrc` or `.zshrc` like
 
     source /path/to/sd_cl
 
-:warning: current version requires [sentaku](https://github.com/rcmdnk/sentaku).
+:white_check_mark: current version requires [sentaku](https://github.com/rcmdnk/sentaku).
 
 Please install sentaku or use
 [standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
@@ -30,6 +30,8 @@ and you may be asked root password.
 If you want to install other directory, do like:
 
     $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install/install.sh|  prefix=~/usr/local/ sh
+
+:warning: Install [sentaku](https://github.com/rcmdnk/sentaku), too.
 
 ## Homebrew at OS X
 
@@ -60,6 +62,7 @@ This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 
 Or, simply download scripts and set where you like.
 
+:warning: Install [sentaku](https://github.com/rcmdnk/sentaku), too.
 
 # Usage
 

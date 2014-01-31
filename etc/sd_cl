@@ -114,7 +114,7 @@ _sd_cl () { # {{{
     while [ $# -gt 0 ];do
       case $1 in
         "-l" ) list=1 ;;
-        "-c" ) ;;
+        "-c" ) _s_align=1;;
         "-n" ) _s_current_n="$2" ;shift;;
         "-p" ) predef=1; window=0; vim=0;;
         "-w" ) window=1; predef=0; vim=0;;

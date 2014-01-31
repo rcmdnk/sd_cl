@@ -110,6 +110,7 @@ _sd_cl () { # {{{
 
   _sf_check_args () { # {{{
     # Get arguments
+    _s_continue=0
     while [ $# -gt 0 ];do
       case $1 in
         "-l" ) list=1 ;;
@@ -176,8 +177,8 @@ _sd_cl () { # {{{
       }
     fi
 
-    return 10
-
+    _s_continue=1
+    return 0
   } # }}}
 
   _sf_execute () { # {{{

@@ -46,7 +46,7 @@ _sd_cl () { # {{{
     echo "Please install: https://github.com/rcmdnk/sentaku"
     return 1
   fi
-  . sentaku -n
+  source sentaku -n
 
   # Set values
   local _SENTAKU_INPUT_FILE=${LASTDIRFILE:-$HOME/.lastDir}

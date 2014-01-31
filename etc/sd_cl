@@ -214,6 +214,7 @@ _sd_cl () { # {{{
   }  # }}}
 
   _sf_p () { # {{{
+    _s_is_print=0
     if [ $predef -eq 1 ] || [ $vim -eq 1 ];then
       continue
     fi
@@ -221,9 +222,8 @@ _sd_cl () { # {{{
     touch $pdf
     if ! grep -q "^${_s_inputs[$_s_current_n]}$" "$pdf";then
       echo "${_s_inputs[$_s_current_n]}" >> "$pdf"
-      _sf_echo "${_s_inputs[$_s_current_n]} was pushed in $pdf"
+      _sf_echo_printall "${_s_inputs[$_s_current_n]} was pushed in $pdf"
     fi
-    _s_is_print=0
   } # }}}
 
   _sf_select () { # {{{

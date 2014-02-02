@@ -12,11 +12,11 @@ then, call it from your `.bashrc` or `.zshrc` like
 
 :white_check_mark: current version requires [sentaku](https://github.com/rcmdnk/sentaku).
 
-Please install sentaku or use
+If you use Homebrew or Curl to insatll, sentaku will be installed automatically, too.
+
+If you directly get the script, please install sentaku or use
 [standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
 (standalone version could be obsolete).
-
-If you use Homebrew to insatll, sentaku will be installed automatically, too.
 
 ## curl
 
@@ -30,8 +30,6 @@ and you may be asked root password.
 If you want to install other directory, do like:
 
     $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install/install.sh|  prefix=~/usr/local/ sh
-
-:warning: Install [sentaku](https://github.com/rcmdnk/sentaku), too.
 
 ## Homebrew at OS X
 

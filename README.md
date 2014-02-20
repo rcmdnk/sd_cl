@@ -111,7 +111,7 @@ If you use `-c`, `cl` starts selection mode. See below demo.
 
 In the selection mode, you can use:
 
-* j: Select 1 below.
+* j: Select 1 down.
 * [n]j: Select [n] below. e.g.: 11j: Select 11th below.
 * k: Select 1 up.
 * [n]k: Select [n] up.

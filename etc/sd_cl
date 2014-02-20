@@ -202,7 +202,7 @@ _sd_cl () { # {{{
     fi
     if [ $_s_cols -ge 42 ];then
       _s_header=" $_s_n directories in total
- vimike updown, e.g)j:up, k:down, gg/G
+ vimike updown, e.g)j:down, k:up, gg/G
  Enter/Space(select), q(quit), d(delete)"
       if [ $vim -eq 1 ];then
         :

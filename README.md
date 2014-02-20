@@ -241,7 +241,3 @@ with `wrap_cd "$@"`.
 # References
 
 * [ターミナルでのディレクトリ移動を保存、取り出しする](http://rcmdnk.github.io/blog/2013/12/27/computer-bash-zsh-sd-cl/)
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/rcmdnk/sd_cl/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-

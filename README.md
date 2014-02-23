@@ -12,13 +12,13 @@ then, call it from your `.bashrc` or `.zshrc` like
 
 :white_check_mark: current version requires [sentaku](https://github.com/rcmdnk/sentaku).
 
-If you use Homebrew or Curl to insatll, sentaku will be installed automatically, too.
+If you use Homebrew or cURL to insatll, sentaku will be installed automatically, too.
 
 If you directly get the script, please install sentaku or use
 [standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
 (standalone version could be obsolete).
 
-## curl
+## cURL
 
 You can use an install script on the web like:
 

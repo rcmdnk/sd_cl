@@ -81,14 +81,15 @@ _sd_cl () { # {{{
 
   # Help
   local _s_help="
-  Usage: cl [-lcph] [-n <number> ]
+  Usage: cl [-lcph] [-n <number> ] [<number>]
   If there are no arguments, you will move to the last saved directory by sd command
 
   Arguments:
      -l          Show saved directories
      -c          Show saved directories and choose a directory
      -C          Clear directories
-     -n <number> Move to <number>-th last directory
+     <number>    Move to <number>-th last directory
+     -n <number> Move to <number>-th last directory (obsolete)
      -N          No header for selection window
      -p          Move to pre-defiend dirctory in $PREDEFDIRFILE
      -w          Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
@@ -113,30 +114,27 @@ _sd_cl () { # {{{
     _s_continue=0
     while [ $# -gt 0 ];do
       case $1 in
-        "-l" ) list=1 ;;
+        "-l" ) list=1;;
         "-c" ) _s_align=1;;
-        "0" ) _s_current_n=$1 ;shift;;
-        "1" ) _s_current_n=$1 ;shift;;
-        "2" ) _s_current_n=$1 ;shift;;
-        "3" ) _s_current_n=$1 ;shift;;
-        "4" ) _s_current_n=$1 ;shift;;
-        "5" ) _s_current_n=$1 ;shift;;
-        "6" ) _s_current_n=$1 ;shift;;
-        "7" ) _s_current_n=$1 ;shift;;
-        "8" ) _s_current_n=$1 ;shift;;
-        "9" ) _s_current_n=$1 ;shift;;
-        "-n" ) _s_current_n="$2" ;shift;;
+        "-n" ) _s_current_n="$2"; shift;;
         "-p" ) predef=1; window=0; vim=0;;
         "-w" ) window=1; predef=0; vim=0;;
         "-v" ) vim=1; predef=0; window=0; _s_delete=0;;
-        "-C" ) cleardir=1 ;;
-        "-N" ) _s_noheader=1 ;;
+        "-C" ) cleardir=1;;
+        "-N" ) _s_noheader=1;;
         "-m" ) ;;
         "-h" )
           echo "$_s_help" >/dev/tty
           return 0
           ;;
-        * ) dir="$1";break;;
+        * )
+          if expr "$1" : "[0-9]*" >/dev/null;then
+            _s_current_n=$1
+          else
+            dir="$1"
+            break
+          fi
+          ;;
       esac
       shift
     done
@@ -172,7 +170,8 @@ _sd_cl () { # {{{
 
     # Clear
     if [ $cleardir -eq 1 ];then
-      echo > $_s_file
+      rm -f $_s_file
+      touch $_s_file
       return 0
     fi
 

@@ -92,14 +92,20 @@ Options for `cl` are here:
     -l          Show saved directories
     -c          Show saved directories and choose a directory
     -C          Clear directories
+    <number>    Move to <number>-th last directory
+    -n <number> Move to <number>-th last directory (obsolete)
     -N          No header for selection window
-    -n <number> Move to <number>-th last directory
     -p          Move to pre-defiend dirctory in $PREDEFDIRFILE
     -w          Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
     -v          Move from current directory, like Vim
-    -h          Print this HELP and exit
+    -h          Print this HELP and quit
 
-`-l`, `-c`, `-C`, `-N` and `-n` are used w/o other arguments (saved directory list), with `-p` (pre-defined directory list) or `-w` (window directory list).
+`-l`, `-c`, `-C`, `-N` and `-n` (`<number>`) are used exclusively.
+
+`-p` (pre-defined directory list) or `-w` (window directory list)
+change the list file and can be used with other options.
+
+e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
 
 ## Saved directory list and cl selection mode example
 

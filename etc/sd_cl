@@ -388,8 +388,19 @@ fi
 # function for cd wrap to pushd/popd {{{
 wrap_cd () {
   local dir="$@"
-  if [ "$#" != 0 ] && [ -f "$@" ];then
-    dir=$(dirname "$@")
+  if [ "$#" = 0 ];then
+    if [ "$(pwd)" = "$HOME" ];then
+      return
+    else
+      dir="$HOME"
+    fi
+  elif [ "$@" = "-" ];then
+    pushd >/dev/null
+    return
+  else
+    if [ -f "$@" ];then
+      dir=$(dirname "$@")
+    fi
   fi
   pushd "$dir" >/dev/null
 }

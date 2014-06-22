@@ -211,20 +211,16 @@ _sd_cl () { # main function {{{
     fi
 
     # Change to given directory
-echo "hoge0" >> ~/hoge
     if [ "$_s_dir" != "" ];then
-echo "hoge1" >> ~/hoge
       _sf_get_values_wrapper
       local i=0
       for ((i=0; i<_s_n; i++));do
         if [ "${_s_inputs[$i]/#\~/${HOME}}" = "$_s_dir" ];then
           _s_current_n=$i
-echo "_s_current_n=$_s_current_n" >> ~/hoge
           _s_continue=1
           return 0
         fi
       done
-echo "dir doesn't match to any" >> ~/hoge
       if [ $window -eq 1 ];then
         dir=$(grep "^$_s_dir" $_s_file|head -n1|cut -d' ' -f 3-)
       fi

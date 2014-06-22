@@ -110,6 +110,11 @@ _sd_cl () { # main function {{{
 
   _sf_initialize_user () {
     _s_delete=1
+    _s_dir=""
+  }
+  _sf_finalize_user () {
+    unset _s_delete
+    unset _s_dir
   }
 
   _sf_check_args () { # {{{
@@ -132,10 +137,11 @@ _sd_cl () { # main function {{{
           return 0
           ;;
         * )
-          if expr "$1" : "[0-9]*" >/dev/null;then
+          if [ "$1" != "/" ] && expr "$1" : "[0-9]*" >/dev/null;then
             _s_current_n=$1
+            break
           else
-            dir="$1"
+            _s_dir="$@"
             break
           fi
           ;;
@@ -159,16 +165,6 @@ _sd_cl () { # main function {{{
         printf "%3d %s\n" $i "${line}"
         ((i++))
       done < $_s_file
-      return 0
-    fi
-
-    # Change to given directory
-    if [ "$dir" != "" ];then
-      if [ $window -eq 1 ];then
-        dir=$(grep "^$dir" $_s_file|head -n1|cut -d' ' -f 3-)
-      fi
-      echo "cd ${dir}"
-      cd "${dir/#\~/${HOME}}"
       return 0
     fi
 
@@ -212,6 +208,29 @@ _sd_cl () { # main function {{{
         IFS=$orig_ifs
         _s_n=${#_s_inputs[@]}
       }
+    fi
+
+    # Change to given directory
+echo "hoge0" >> ~/hoge
+    if [ "$_s_dir" != "" ];then
+echo "hoge1" >> ~/hoge
+      _sf_get_values_wrapper
+      local i=0
+      for ((i=0; i<_s_n; i++));do
+        if [ "${_s_inputs[$i]/#\~/${HOME}}" = "$_s_dir" ];then
+          _s_current_n=$i
+echo "_s_current_n=$_s_current_n" >> ~/hoge
+          _s_continue=1
+          return 0
+        fi
+      done
+echo "dir doesn't match to any" >> ~/hoge
+      if [ $window -eq 1 ];then
+        dir=$(grep "^$_s_dir" $_s_file|head -n1|cut -d' ' -f 3-)
+      fi
+      echo "cd ${_s_dir}"
+      cd "${_s_dir/#\~/${HOME}}"
+      return 0
     fi
 
     _s_continue=1
@@ -380,7 +399,7 @@ if [ $NOCOMPLETION -eq 0 ];then
         touch $ldf
         COMPREPLY=($( compgen -W "$(cat $ldf)" -- $cur))
       elif [[ "$prev" == -b ]];then
-        COMPREPLY=($( compgen -W "$(dirs)" -- $cur))
+        COMPREPLY=($( compgen -W "$(dirs -p)" -- $cur))
       fi
       IFS=$orig_ifs
     } # }}}

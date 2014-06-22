@@ -21,6 +21,7 @@
 #CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ################################################################################# }}}
 
+# Parameters {{{
 # Directory store file
 export LASTDIRFILE=${LASTDIRFILE:-$HOME/.lastDir}
 export PREDEFDIRFILE=${PREDEFDIRFILE:-$HOME/.predefDir}
@@ -37,9 +38,9 @@ export NOCOMPINIT=${NOCOMPLETION:-0}
 
 # cd wrap to pushd/popd
 export ISCDWRAP=${ISCDWRAP:-1}
+# }}}
 
-# main function
-_sd_cl () { # {{{
+_sd_cl () { # main function {{{
   # source sentaku
   if ! type sentaku >& /dev/null ;then
     echo "sd_cl needs sentaku"
@@ -93,6 +94,7 @@ _sd_cl () { # {{{
      -N          No header for selection window
      -p          Move to pre-defiend dirctory in $PREDEFDIRFILE
      -w          Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
+     -b          Move back to moving histories
      -v          Move from current directory, like Vim
      -h          Print this HELP and quit
 "
@@ -102,6 +104,7 @@ _sd_cl () { # {{{
   local predef=0
   local window=0
   local vim=0
+  local back=0
   local cleardir=0
   local dir=""
 
@@ -117,9 +120,10 @@ _sd_cl () { # {{{
         "-l" ) list=1;;
         "-c" ) _s_align=1;;
         "-n" ) _s_current_n="$2"; shift;;
-        "-p" ) predef=1; window=0; vim=0;;
-        "-w" ) window=1; predef=0; vim=0;;
-        "-v" ) vim=1; predef=0; window=0; _s_delete=0;;
+        "-p" ) predef=1; window=0; vim=0; back=0;;
+        "-w" ) window=1; predef=0; vim=0; back=0;;
+        "-v" ) vim=1; predef=0; window=0; back=0; _s_delete=0;;
+        "-b" ) back=1; vim=0; predef=0; window=0; _s_delete=0;;
         "-C" ) cleardir=1;;
         "-N" ) _s_noheader=1;;
         "-m" ) ;;
@@ -199,13 +203,27 @@ _sd_cl () { # {{{
       }
     fi
 
+    if [ $back -eq 1 ];then
+      _sf_get_values () {
+        # Get variables
+        local orig_ifs=$IFS
+        IFS="$_s_s"
+        _s_inputs=($(dirs -p))
+        IFS=$orig_ifs
+        _s_n=${#_s_inputs[@]}
+      }
+    fi
+
     _s_continue=1
     return 0
   } # }}}
 
   _sf_execute () { # {{{
-    local n=${1:-0}
-    local dir="${_s_inputs[$n]}"
+    if [ $back -eq 1 ];then
+      pushd +${_s_current_n} >/dev/null
+      return
+    fi
+    local dir="${_s_inputs[$_s_current_n]}"
     if [ $window -eq 1 ];then
       dir=$(grep "^$dir" $_s_file|head -n1|cut -d' ' -f 3-)
     fi
@@ -229,6 +247,8 @@ _sd_cl () { # {{{
  n Window Pane Directory"
       elif [ $predef -eq 1 ];then
         :
+      elif [ $back -eq 1 ];then
+        :
       else
         _s_header="$_s_header
  p(put to pre-defined)"
@@ -238,7 +258,7 @@ _sd_cl () { # {{{
 
   _sf_p () { # {{{
     _s_is_print=0
-    if [ $predef -eq 1 ] || [ $vim -eq 1 ];then
+    if [ $predef -eq 1 ] || [ $vim -eq 1 ] || [ $back -eq 1 ];then
       continue
     fi
     local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
@@ -250,16 +270,17 @@ _sd_cl () { # {{{
   } # }}}
 
   _sf_select () { # {{{
-    if [ $vim -eq 0 ];then
+    if [ $vim -eq 1 ];then
+      if [ -d "${_s_inputs[$_s_current_n]}" ];then
+        cd "${_s_inputs[$_s_current_n]}"
+        _sf_get_values
+        _sf_reset
+      else
+        _sf_echo "${_s_inputs[$_s_current_n]} is not a directory"
+      fi
+    elif [ $vim -eq 0 ];then
       _s_break=1
       return
-    fi
-    if [ -d "${_s_inputs[$_s_current_n]}" ];then
-      cd "${_s_inputs[$_s_current_n]}"
-      _sf_get_values
-      _sf_reset
-    else
-      _sf_echo "${_s_inputs[$_s_current_n]} is not a directory"
     fi
   } # }}}
 
@@ -302,29 +323,39 @@ if [ $NOCOMPLETION -eq 0 ];then
       typeset -A opt_args
       local context state line
       _arguments \
+        '-l:: :->non'\
+        '-c:: :->lastdir'\
+        '-C:: :->non'\
+        '-n:: :->non'\
+        '-N:: :->non'\
         '-p:: :->predef'\
         '-w:: :->window'\
-        '-c:: :->non'\
-        '-l:: :->non'\
-        '-n:: :->non'\
+        '-b:: :->back'\
+        '-v:: :->non'\
         '-h:: :->non'\
         '*:: :->lastdir'
-      local ldf
+      local ldf=""
       if echo $state|grep -q non;then
         return 0
       elif echo $state|grep -q predef;then
         ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
       elif echo $state|grep -q window;then
         ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
+      elif echo $state|grep -q back;then
+        :
       elif echo $state|grep -q lastdir;then
         ldf=${LASTDIRFILE:-$HOME/.lastDir}
       else
         return 0
       fi
-      touch $ldf
       local orig_ifs=$IFS
       IFS=$'\n'
-      compadd $(cat $ldf)
+      if [ "$ldf" != "" ];then
+        touch $ldf
+        compadd $(cat $ldf)
+      else
+        compadd $(dirs -p)
+      fi
       IFS=$orig_ifs
     } # }}}
     compdef _cl cl
@@ -334,16 +365,22 @@ if [ $NOCOMPLETION -eq 0 ];then
       local cur=${COMP_WORDS[COMP_CWORD]}
       local prev=${COMP_WORDS[COMP_CWORD-1]}
       local ldf=${LASTDIRFILE:-$HOME/.lastDir}
-      if [[ $prev = -p ]];then
-        ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
-      elif [[ $prev = -w ]];then
-        ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
-      fi
-      touch $ldf
+      case $prev in
+        -p)ldf=${PREDEFDIRFILE:-$HOME/.predefDir};;
+        -w)ldf=${WINDOWDIRFILE:-$HOME/.windowDir};;
+      esac
       local orig_ifs=$IFS
       IFS=$'\n'
-      if [[ "$cur" != -* && ( "$prev" == $1 || "$prev" == -p ) || "$prev" == -w ]];then
+      if [[ "$cur" == -* ]];then
+        IFS=$orig_ifs
+        COMPREPLY=($( compgen -W "-l -c -C -n -N -p -w -b -v -h" -- $cur))
+      elif [[ "$cur" == -c || "$cur" == -p || "$cur" == -w || "$cur" == -b ]];then
+        COMPREPLY=("$cur")
+      elif [[ ("$cur" != -* && "$prev" == $1) || "$prev" == -c || "$prev" == -p || "$prev" == -w ]];then
+        touch $ldf
         COMPREPLY=($( compgen -W "$(cat $ldf)" -- $cur))
+      elif [[ "$prev" == -b ]];then
+        COMPREPLY=($( compgen -W "$(dirs)" -- $cur))
       fi
       IFS=$orig_ifs
     } # }}}
@@ -409,7 +446,7 @@ wrap_cd () {
 alias bd="popd >/dev/null"
 # }}}
 
-# Set cd/chpwd
+# Set cd/chpwd {{{
 if [ "$ZSH_VERSION" != "" ];then
   if [ $ISPOSTCD -eq 1 ];then
     chpwd () {
@@ -453,4 +490,3 @@ cdpwd () {
   cd -P .
 }
 # }}}
-

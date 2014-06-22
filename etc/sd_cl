@@ -387,19 +387,11 @@ fi
 
 # function for cd wrap to pushd/popd {{{
 wrap_cd () {
-  if [ $# = 0 ];then
-    builtin cd
-  elif [ "$1" = "-" ];then
-    local opwd=$OLDPWD
-    pushd . >/dev/null
-    builtin cd $opwd
-  elif [ -f "$1" ];then
-    pushd . >/dev/null
-    builtin cd $(dirname "$@")
-  else
-    pushd . >/dev/null
-    builtin cd "$@"
+  local dir="$@"
+  if [ "$#" != 0 ] && [ -f "$@" ];then
+    dir=$(dirname "$@")
   fi
+  pushd "$dir" >/dev/null
 }
 
 # Alias for popd

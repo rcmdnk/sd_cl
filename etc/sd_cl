@@ -149,32 +149,43 @@ _sd_cl () { # main function {{{
       shift
     done
 
-    # Use pre-defined directory file
+    # Set a file other than LASTDIRFILE
     if [ $predef -eq 1 ] || [ $window -eq 1 ];then
       if [ $predef -eq 1 ];then
         _s_file=${PREDEFDIRFILE:-$HOME/.predefDir}
       elif [ $window -eq 1 ];then
         _s_file=${WINDOWDIRFILE:-$HOME/.windowDir}
+      elif [ $vim -eq 1 ] || [ $back -eq 1 ];then
+        _s_file=""
       fi
     fi
 
     # List up
     if [ $list -eq 1 ];then
-      local i=0
-      while read line;do
-        printf "%3d %s\n" $i "${line}"
-        ((i++))
-      done < $_s_file
+      if [ "$_s_file" != "" ];then
+        local i=0
+        while read line;do
+          printf "%3d %s\n" $i "${line}"
+          ((i++))
+        done < $_s_file
+      elif [ $back -eq 1 ];then
+        dirs -v -p
+      fi
       return 0
     fi
 
     # Clear
     if [ $cleardir -eq 1 ];then
-      rm -f $_s_file
-      touch $_s_file
+      if [ "$_s_file" != "" ];then
+        rm -f $_s_file
+        touch $_s_file
+      elif [ $back -eq 1 ];then
+        dirs -c
+      fi
       return 0
     fi
 
+    # Functions for vim mode
     if [ $vim -eq 1 ];then
       _sf_get_values () {
         # Get variables
@@ -199,6 +210,7 @@ _sd_cl () { # main function {{{
       }
     fi
 
+    # Functions for back mode
     if [ $back -eq 1 ];then
       _sf_get_values () {
         # Get variables
@@ -372,8 +384,18 @@ if [ $NOCOMPLETION -eq 0 ];then
         compadd $(dirs -p)
       fi
       IFS=$orig_ifs
-    } # }}}
+    }
     compdef _cl cl
+    # }}}
+    _bd () { # {{{
+      typeset -A opt_args
+      local orig_ifs=$IFS
+      IFS=$'\n'
+      compadd $(dirs -p)
+      IFS=$orig_ifs
+    }
+    compdef _bd bd
+    # }}}
   elif [ "$BASH_VERSION" != "" ];then
     _cl () { # {{{
       COMPREPLY=()
@@ -398,8 +420,18 @@ if [ $NOCOMPLETION -eq 0 ];then
         COMPREPLY=($( compgen -W "$(dirs -p)" -- $cur))
       fi
       IFS=$orig_ifs
-    } # }}}
+    }
     complete -F _cl cl
+    # }}}
+    _bd () { # {{{
+      local orig_ifs=$IFS
+      local cur=${COMP_WORDS[COMP_CWORD]}
+      IFS=$'\n'
+      COMPREPLY=($( compgen -W "$(dirs -p)" -- $cur))
+      IFS=$orig_ifs
+    }
+    complete -F _bd bd
+    # }}}
   fi
 fi
 # }}}
@@ -458,7 +490,14 @@ wrap_cd () {
 }
 
 # Alias for popd
-alias bd="popd >/dev/null"
+bd () {
+  if [ $# -eq 0 ];then
+    # 0 is current directory
+    cl -b 1
+  else
+    cl -b $@
+  fi
+}
 # }}}
 
 # Set cd/chpwd {{{

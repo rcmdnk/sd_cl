@@ -141,7 +141,7 @@ _sd_cl () { # main function {{{
             _s_current_n=$1
             break
           else
-            _s_dir="$@"
+            _s_dir="$*"
             break
           fi
           ;;
@@ -471,19 +471,19 @@ fi
 
 # function for cd wrap to pushd/popd {{{
 wrap_cd () {
-  local dir="$@"
-  if [ "$#" = 0 ];then
+  local dir="$*"
+  if [ "$*" = "" ];then
     if [ "$(pwd)" = "$HOME" ];then
       return
     else
       dir="$HOME"
     fi
-  elif [ "$@" = "-" ];then
+  elif [ "$*" = "-" ];then
     pushd >/dev/null
     return
   else
-    if [ -f "$@" ];then
-      dir=$(dirname "$@")
+    if [ -f "$*" ];then
+      dir=$(dirname "$*")
     fi
   fi
   pushd "$dir" >/dev/null
@@ -495,7 +495,7 @@ bd () {
     # 0 is current directory
     cl -b 1
   else
-    cl -b $@
+    cl -b "$*"
   fi
 }
 # }}}
@@ -509,13 +509,13 @@ if [ "$ZSH_VERSION" != "" ];then
   fi
   if [ $ISCDWRAP -eq 1 ];then
     cd () {
-      wrap_cd "$@"
+      wrap_cd "$*"
     }
   fi
 else
   if [ $ISPOSTCD -eq 1 ] && [ $ISCDWRAP -eq 1 ];then
     cd () {
-      wrap_cd "$@"
+      wrap_cd "$*"
       local ret=$?
       if [ $ret -eq 0 ];then
         post_cd
@@ -524,7 +524,7 @@ else
     }
   elif [ $ISPOSTCD -eq 1 ];then
     cd () {
-      builtin cd "$@"
+      builtin cd "$*"
       local ret=$?
       if [ $ret -eq 0 ];then
         post_cd
@@ -533,7 +533,7 @@ else
     }
   elif [ $ISCDWRAP -eq 1 ];then
     cd () {
-      wrap_cd "$@"
+      wrap_cd "$*"
     }
   fi
 fi

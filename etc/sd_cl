@@ -68,10 +68,10 @@ _sd_cl () { # {{{
     if [ $# -eq 0 ];then
       # Current directory
       curdir=$(pwd -P)
-    fi
 
-    _sf_main -p "$curdir" >/dev/null
-    return $?
+      _sf_main -p "$curdir" >/dev/null
+      return $?
+    fi
   elif [ "$sdcl" != "cl" ];then
     echo "Usage: _sd_cl <sd or cl> [arg1 [arg2 [...]]]"
     return 1

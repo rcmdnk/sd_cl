@@ -71,7 +71,12 @@ _sd_cl () { # main function {{{
       curdir=$(pwd -P)
     fi
 
-    _sf_main -p "$curdir" >/dev/null
+    if [ ! -d "$curdir" ];then
+      echo "$curdir: No such directory"
+      return 1
+    else
+      _sf_main -p "$curdir" >/dev/null
+    fi
     return $?
   elif [ "$sdcl" != "cl" ];then
     echo "Usage: _sd_cl <sd or cl> [arg1 [arg2 [...]]]"
@@ -136,6 +141,7 @@ _sd_cl () { # main function {{{
           echo "$_s_help" >/dev/tty
           return 0
           ;;
+        "--" ) shift; _s_dir="$*"; break;;
         * )
           if [ "$1" != "/" ] && expr "$1" : "[0-9]*" >/dev/null;then
             _s_current_n=$1

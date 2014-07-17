@@ -61,7 +61,7 @@ _sd_cl () { # main function {{{
   if [ "$sdcl" = "sd" ];then
     # Edit predefined dir
     if [ $# -eq 1 ] && [ "$1" = "-e" ];then
-      ${EDITOR:-"vim"} ${PREDEFDIRFILE:-$HOME/.predefDir}
+      ${EDITOR:-"vi"} ${PREDEFDIRFILE:-$HOME/.predefDir}
       return 0
     fi
     # Set Save Dir

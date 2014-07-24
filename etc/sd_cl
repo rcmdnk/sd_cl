@@ -138,7 +138,7 @@ _sd_cl () { # main function {{{
         "-N" ) _s_noheader=1;;
         "-m" ) ;;
         "-h" )
-          echo "$_s_help" >/dev/tty
+          echo "$_s_help"|${PAGER:-less} >/dev/tty
           return 0
           ;;
         "--" ) shift; _s_dir="$*"; break;;

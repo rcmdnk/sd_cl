@@ -183,8 +183,7 @@ _sd_cl () { # main function {{{
     # Clear
     if [ $cleardir -eq 1 ];then
       if [ "$_s_file" != "" ];then
-        rm -f $_s_file
-        touch $_s_file
+        echo -n > $_s_file
       elif [ $back -eq 1 ];then
         dirs -c
       fi

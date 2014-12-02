@@ -61,7 +61,7 @@ _sd_cl () { # main function {{{
   if [ "$sdcl" = "sd" ];then
     # Edit predefined dir
     if [ $# -eq 1 ] && [ "$1" = "-e" ];then
-      ${EDITOR:-"vi"} ${PREDEFDIRFILE:-$HOME/.predefDir}
+      ${EDITOR:-"vi"} "${PREDEFDIRFILE:-$HOME/.predefDir}"
       return 0
     fi
     # Set Save Dir
@@ -200,7 +200,7 @@ _sd_cl () { # main function {{{
         _s_inputs=($(find . -type d -maxdepth 1|grep -v "^.$")) # All (including .*) directories
         local inputs_tmp=($(find . -type l -maxdepth 1)) # Symbolic links
         local l
-        for l in ${inputs_tmp[@]};do
+        for l in "${inputs_tmp[@]}";do
           if ls -l "$l"|grep "/$";then
             _s_inputs=("${_s_inputs[@]}" "$l")
           fi
@@ -291,10 +291,10 @@ _sd_cl () { # main function {{{
   _sf_p () { # {{{
     _s_is_print=0
     if [ $predef -eq 1 ] || [ $vim -eq 1 ] || [ $back -eq 1 ];then
-      continue
+      return
     fi
     local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
-    touch $pdf
+    touch "$pdf"
     if ! grep -q "^${_s_inputs[$_s_current_n]}$" "$pdf";then
       echo "${_s_inputs[$_s_current_n]}" >> "$pdf"
       _sf_echo_printall "${_s_inputs[$_s_current_n]} was pushed in $pdf"
@@ -327,7 +327,7 @@ cl () { # Change directory to the Last directory {{{
 
   # Change to the last dir
   if [ $# -eq 0 ];then
-    local ld=$(head -n1 ${LASTDIRFILE:-$HOME/.lastDir})
+    local ld="$(head -n1 "${LASTDIRFILE:-$HOME/.lastDir}")"
     if [ "$ld" != "" ];then
       cd "$ld"
       echo "$ld"
@@ -367,15 +367,15 @@ if [ $NOCOMPLETION -eq 0 ];then
         '-h:: :->non'\
         '*:: :->lastdir'
       local ldf=""
-      if echo $state|grep -q non;then
+      if echo "$state"|grep -q non;then
         return 0
-      elif echo $state|grep -q predef;then
+      elif echo "$state"|grep -q predef;then
         ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
-      elif echo $state|grep -q window;then
+      elif echo "$state"|grep -q window;then
         ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
-      elif echo $state|grep -q back;then
+      elif echo "$state"|grep -q back;then
         :
-      elif echo $state|grep -q lastdir;then
+      elif echo "$state"|grep -q lastdir;then
         ldf=${LASTDIRFILE:-$HOME/.lastDir}
       else
         return 0
@@ -383,10 +383,10 @@ if [ $NOCOMPLETION -eq 0 ];then
       local orig_ifs=$IFS
       IFS=$'\n'
       if [ "$ldf" != "" ];then
-        touch $ldf
-        compadd $(cat $ldf)
+        touch "$ldf"
+        compadd "$(cat "$ldf")"
       else
-        compadd $(dirs -p)
+        compadd "$(dirs -p)"
       fi
       IFS=$orig_ifs
     }
@@ -396,7 +396,7 @@ if [ $NOCOMPLETION -eq 0 ];then
       typeset -A opt_args
       local orig_ifs=$IFS
       IFS=$'\n'
-      compadd $(dirs -p)
+      compadd "$(dirs -p)"
       IFS=$orig_ifs
     }
     compdef _bd bd
@@ -415,14 +415,14 @@ if [ $NOCOMPLETION -eq 0 ];then
       IFS=$'\n'
       if [[ "$cur" == -* ]];then
         IFS=$orig_ifs
-        COMPREPLY=($( compgen -W "-l -c -C -n -N -p -w -b -v -h" -- $cur))
+        COMPREPLY=($( compgen -W "-l -c -C -n -N -p -w -b -v -h" -- "$cur"))
       elif [[ "$cur" == -c || "$cur" == -p || "$cur" == -w || "$cur" == -b ]];then
         COMPREPLY=("$cur")
-      elif [[ ("$cur" != -* && "$prev" == $1) || "$prev" == -c || "$prev" == -p || "$prev" == -w ]];then
-        touch $ldf
-        COMPREPLY=($( compgen -W "$(cat $ldf)" -- $cur))
+      elif [[ ("$cur" != -* && "$prev" == "$1") || "$prev" == -c || "$prev" == -p || "$prev" == -w ]];then
+        touch "$ldf"
+        COMPREPLY=($( compgen -W "$(cat "$ldf")" -- "$cur"))
       elif [[ "$prev" == -b ]];then
-        COMPREPLY=($( compgen -W "$(dirs -p)" -- $cur))
+        COMPREPLY=($( compgen -W "$(dirs -p)" -- "$cur"))
       fi
       IFS=$orig_ifs
     }
@@ -432,7 +432,7 @@ if [ $NOCOMPLETION -eq 0 ];then
       local orig_ifs=$IFS
       local cur=${COMP_WORDS[COMP_CWORD]}
       IFS=$'\n'
-      COMPREPLY=($( compgen -W "$(dirs -p)" -- $cur))
+      COMPREPLY=($( compgen -W "$(dirs -p)" -- "$cur"))
       IFS=$orig_ifs
     }
     complete -F _bd bd
@@ -448,13 +448,13 @@ post_cd () {
 if [ -n "$STY" ];then
   post_cd () {
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
-    touch $wdf
+    touch "$wdf"
     if grep -q "^$WINDOW 0 " "$wdf";then
       sed "s|^$WINDOW 0 .*$|$WINDOW 0 $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
-      mv "${wdf}.tmp" ${wdf}
+      mv "${wdf}.tmp" "${wdf}"
     else
       (cat "$wdf" && echo "$WINDOW 0 $(pwd)")|sort > "${wdf}.tmp"
-      mv "${wdf}.tmp" ${wdf}
+      mv "${wdf}.tmp" "${wdf}"
     fi
   }
 elif [ -n "$TMUX" ];then
@@ -462,13 +462,13 @@ elif [ -n "$TMUX" ];then
     local window="$(tmux display -p '#I')"
     local pane="$(tmux display -p '#P')"
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
-    touch $wdf
+    touch "$wdf"
     if grep -q "^$window $pane " "$wdf";then
       sed "s|^$window $pane .*$|$window $pane $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
-      mv "${wdf}.tmp" ${wdf}
+      mv "${wdf}.tmp" "${wdf}"
     else
       (cat "$wdf" && echo "$window $pane $(pwd)")|sort > "${wdf}.tmp"
-      mv "${wdf}.tmp" ${wdf}
+      mv "${wdf}.tmp" "${wdf}"
     fi
   }
 fi

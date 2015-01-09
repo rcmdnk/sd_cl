@@ -68,7 +68,7 @@ _sd_cl () { # main function {{{
     local curdir="$*"
     if [ $# -eq 0 ];then
       # Current directory
-      curdir=$(pwd -P)
+      curdir=$(pwd)
     fi
 
     if [ ! -d "$curdir" ];then

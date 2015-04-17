@@ -171,7 +171,7 @@ _sd_cl () { # main function {{{
       if [ "$_s_file" != "" ];then
         local i=0
         while read line;do
-          printf "%3d %s\n" $i "${line}"
+          printf "%3d %s\n" $i "${line/$HOME/~}"
           ((i++))
         done < $_s_file
       elif [ $back -eq 1 ];then

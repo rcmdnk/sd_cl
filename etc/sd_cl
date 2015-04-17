@@ -197,8 +197,8 @@ _sd_cl () { # main function {{{
         local orig_ifs=$IFS
         IFS="$_s_s"
         #_s_inputs=($(ls -F|grep "/$")) # Only visible directories
-        _s_inputs=($(find . -type d -maxdepth 1|grep -v "^.$")) # All (including .*) directories
-        local inputs_tmp=($(find . -type l -maxdepth 1)) # Symbolic links
+        _s_inputs=($(find . -type d -maxdepth 1|grep -v "^.$"|cut -d'/' -f2)) # All (including .*) directories
+        local inputs_tmp=($(find . -type l -maxdepth 1|cut -d'/' -f2)) # Symbolic links
         local l
         for l in "${inputs_tmp[@]}";do
           if ls -l "$l"|grep "/$";then

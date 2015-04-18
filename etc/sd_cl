@@ -285,6 +285,7 @@ _sd_cl () { # main function {{{
         _s_header="$_s_header
  p(put to pre-defined)"
       fi
+      _s_header="$_s_header\n"
     fi
   }  # }}}
 

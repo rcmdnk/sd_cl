@@ -3,7 +3,7 @@ sd_cl
 
 Useful functions to change directories for Bash/Zsh and GNU screen/tmux.
 
-# Installation
+## Installation
 
 Get `sd_cl` and set to where you like,
 then, call it from your `.bashrc` or `.zshrc` like
@@ -18,7 +18,7 @@ If you directly get the script, please install sentaku or use
 [standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
 (standalone version could be obsolete).
 
-## cURL
+### cURL
 
 You can use an install script on the web like:
 
@@ -31,7 +31,7 @@ If you want to install other directory, do like:
 
     $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install/install.sh|  prefix=~/usr/local/ sh
 
-## Homebrew at OS X
+### Homebrew at OS X
 
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
 
@@ -56,15 +56,15 @@ and do `brew file install`, you will have all useful scripts in
 
 This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 
-## Download
+### Download
 
 Or, simply download scripts and set where you like.
 
 :warning: Install [sentaku](https://github.com/rcmdnk/sentaku), too.
 
-# Usage
+## Usage
 
-## Main functions: sd/cl
+### Main functions: sd/cl
 
 `sd_cl` will load new functions:
 
@@ -86,7 +86,7 @@ You can easily move to other window's directory.
 * `sd` at Window 1 (e.g. directory: `~/usr/etc`).
 * `cl` at Window 2, then you are in `~/usr/etc` at Window 2, too.
 
-## Options for cl
+### Options for cl
 Options for `cl` are here:
 
     -l          Show saved directories
@@ -107,7 +107,7 @@ change the list file and can be used with other options.
 
 e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
 
-## Saved directory list and cl selection mode example
+### Saved directory list and cl selection mode example
 
 If you work w/o `-p` or `-w`, `cl` uses saved (by `sd`) directory list.
 
@@ -128,14 +128,14 @@ In the selection mode, you can use:
 * Enter: Go to selected directory and quit.
 * q: Quit.
 
-## Pre-defined directory list
+### Pre-defined directory list
 
 If you use `-p`, it uses `pre-defined` directory list, which is not changed by `sd`.
 
 In normal selection mode (i.e. `cl -c`), you can select and put the directory
 to the `pre-defined` directory list (use `p` in the mode).
 
-## Window directory list
+### Window directory list
 
 If you are working in GNU screen or tmux, each window's directory is saved automatically.
 You can change a directory to there by using `-w` option.
@@ -151,12 +151,12 @@ e.g.:
 This command change the directory to the directory of Window 3.
 If it has several panes, it chooses the directory of the first pane.
 
-## Vim like file explorer
+### Vim like file explorer
 
 Option `-v` will give you the continuous selection mode to change the directory,
 like vim file explorer.
 
-## Tab completion
+### Tab completion
 
 Tab completion is available both for Bash and Zsh.
 
@@ -166,13 +166,13 @@ Tab completion is available both for Bash and Zsh.
 
 If you give directory name to `cl`, you will just move to the directory like normal `cd`.
 
-## Bonus alias/functions
+### Bonus alias/functions
 
 * bd (back to directory): alias for to `popd >/dev/null`
 * cd : `cd` is wrapped with `popd`. Useful to use with `bd`.
 * cdpwd : works as `cd -P .`, i.e. resolves symbolic links in the path.
 
-# Options
+## Options
 
 Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
 
@@ -244,6 +244,6 @@ i.e., if you want to enable both in Bash, you should replace above `builtin cd "
 with `wrap_cd "$@"`.
 
 
-# References
+## References
 
 * [ターミナルでのディレクトリ移動を保存、取り出しする](http://rcmdnk.github.io/blog/2013/12/27/computer-bash-zsh-sd-cl/)

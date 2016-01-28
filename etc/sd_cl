@@ -88,8 +88,11 @@ _sd_cl () { # main function {{{
 
   # Help
   local _s_help="
-  Usage: cl [-lcph] [-n <number> ] [<number>]
-  If there are no arguments, you will move to the last saved directory by sd command
+  Usage: cl [-lcph] [-n <number> ] [<number>] [<directory>]
+  If there are no arguments, you will move to the last saved directory by sd command.
+  If you give any directory name, it searches for it in saved directories
+  and cd to there if only one is found.
+  If more than one directories are found, go to the selection mode.
 
   Arguments:
      -l          Show saved directories
@@ -213,6 +216,10 @@ _sd_cl () { # main function {{{
         _s_inputs=($(echo "${_s_inputs[*]}"|sort))
         IFS=$orig_ifs
         _s_n=${#_s_inputs[@]}
+        local i
+        for i in $(seq 0 $((_s_n-1)));do
+          _s_v_selected[$i]=0
+        done
       }
     fi
 
@@ -225,26 +232,65 @@ _sd_cl () { # main function {{{
         _s_inputs=($(dirs -p))
         IFS=$orig_ifs
         _s_n=${#_s_inputs[@]}
+        local i
+        for i in $(seq 0 $((_s_n-1)));do
+          _s_v_selected[$i]=0
+        done
+      }
+    fi
+
+    # Functions for no option, (-c + -p + -b)
+    if [ $_s_align -eq 0 ] && [ $predef -eq 0 ] && [ $window -eq 0 ] &&\
+        [ $vim -eq 0 ] && [ $back -eq 0 ];then
+      _s_align=0
+      # Get variables
+      local all_inputs=()
+      _s_file=${LASTDIRFILE:-$HOME/.lastDir}
+      _sf_get_values_wrapper
+      all_inputs=("${all_inputs[@]}" "${_s_inputs[@]}")
+      _s_file=${PREDEFDIRFILE:-$HOME/.predefDir}
+      _sf_get_values_wrapper
+      all_inputs=("${all_inputs[@]}" "${_s_inputs[@]}")
+      local orig_ifs=$IFS
+      IFS="$_s_s"
+      _s_inputs=("${all_inputs[@]}" $(dirs -p))
+      IFS=$orig_ifs
+      _s_file=""
+      _s_n=${#_s_inputs[@]}
+      _s_v_selected=()
+      local i
+      for i in $(seq 0 $((_s_n-1)));do
+        _s_v_selected=(${_s_v_selected[@]} 0)
+      done
+      _sf_get_values () {
+        :
       }
     fi
 
     # Change to given directory
     if [ "$_s_dir" != "" ];then
+      _s_align=0
       _sf_get_values_wrapper
-      local i=0
-      for ((i=0; i<_s_n; i++));do
-        if [ "${_s_inputs[$i]/#\~/${HOME}}" = "${_s_dir/#\~/${HOME}}" ];then
-          _s_current_n=$i
-          _s_continue=1
-          return 0
-        fi
-      done
+
+      local orig_ifs=$IFS
+      IFS="$_s_s"
+      local v
+      local -a d
+      d=( $(for v in "${_s_inputs[@]}";do echo "$v";done|sed "s|~|${HOME}|g"|grep "${_s_dir/#\~/${HOME}}"|sort|uniq) )
+      _s_inputs=("${d[@]}")
+      _s_n=${#_s_inputs[@]}
       if [ $window -eq 1 ];then
-        dir=$(grep "^$_s_dir" $_s_file|head -n1|cut -d' ' -f 3-)
+        d=($(echo "${d[@]}"|cut -d' ' -f 3-))
       fi
-      echo "cd ${_s_dir}"
-      eval cd "${_s_dir}"
-      return 0
+
+      if [ ${#d[@]} -eq 1 ];then
+        _s_current_n=0
+        return 0
+      elif [ ${#d[@]} -eq 0 ];then
+        echo "No such a directory is stored: ${_s_dir}"
+        return 1
+      fi
+      IFS=$orig_ifs
     fi
 
     _s_continue=1
@@ -360,14 +406,14 @@ if [ $NOCOMPLETION -eq 0 ];then
         '-l:: :->non'\
         '-c:: :->lastdir'\
         '-C:: :->non'\
-        '-n:: :->non'\
-        '-N:: :->non'\
+        '-n:: :->xxx'\
+        '-N:: :->xxx'\
         '-p:: :->predef'\
         '-w:: :->window'\
         '-b:: :->back'\
         '-v:: :->non'\
         '-h:: :->non'\
-        '*:: :->lastdir'
+        '*:: :->xxx'
       local ldf=""
       if echo "$state"|grep -q non;then
         return 0
@@ -380,15 +426,28 @@ if [ $NOCOMPLETION -eq 0 ];then
       elif echo "$state"|grep -q lastdir;then
         ldf=${LASTDIRFILE:-$HOME/.lastDir}
       else
-        return 0
+        ldf=all
       fi
       local orig_ifs=$IFS
       IFS=$'\n'
-      if [ "$ldf" != "" ];then
+      if [ "$ldf" = "all" ];then
+        ldf=${LASTDIRFILE:-$HOME/.lastDir}
+        local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
         touch "$ldf"
-        compadd "$(cat "$ldf")"
+        touch "$pdf"
+        local -a ld
+        local -a pd
+        local -a bd
+        ld=($(cat "$ldf"|sed "s|~|$HOME|"))
+        pd=($(cat "$pdf"|sed "s|~|$HOME|"))
+        bd=($(dirs -p|sed "s|~|$HOME|"))
+        _describe -t lastdir "Saved directories" ld
+        _describe -t predir "Pre defined directories" pd
+        _describe -t backdir "Last directories" bd
+      elif [ "$ldf" != "" ];then
+        compadd $(cat $ldf|sed "s|~|$HOME|")
       else
-        compadd "$(dirs -p)"
+        compadd $(dirs -p|sed "s|~|$HOME|")
       fi
       IFS=$orig_ifs
     }
@@ -408,24 +467,38 @@ if [ $NOCOMPLETION -eq 0 ];then
       COMPREPLY=()
       local cur=${COMP_WORDS[COMP_CWORD]}
       local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+      if [[ "$cur" == -* ]];then
+        COMPREPLY=($( compgen -W "-l -c -C -n -N -p -w -b -v -h" -- "$cur"))
+        return
+      elif [[ "$cur" == -l || "$cur" == -c || "$cur" == -C || "$cur" == -n ||\
+              "$cur" == -N || "$cur" == -p || "$cur" == -w || "$cur" == -b ||\
+              "$cur" == -v || "$cur" == -h ]];then
+        COMPREPLY=("$cur")
+        return
+      elif [[ "$prev" == -l || "$prev" == -C || "$prev" == -v || "$prev" == -h ]];then
+        return
+      elif [[ "$prev" != -* && $COMP_CWORD -ne 1 ]];then
+        return
+      fi
+
       local ldf=${LASTDIRFILE:-$HOME/.lastDir}
-      case $prev in
-        -p)ldf=${PREDEFDIRFILE:-$HOME/.predefDir};;
-        -w)ldf=${WINDOWDIRFILE:-$HOME/.windowDir};;
-      esac
+      local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
+      local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
+      local d=""
+
       local orig_ifs=$IFS
       IFS=$'\n'
-      if [[ "$cur" == -* ]];then
-        IFS=$orig_ifs
-        COMPREPLY=($( compgen -W "-l -c -C -n -N -p -w -b -v -h" -- "$cur"))
-      elif [[ "$cur" == -c || "$cur" == -p || "$cur" == -w || "$cur" == -b ]];then
-        COMPREPLY=("$cur")
-      elif [[ ("$cur" != -* && "$prev" == "$1") || "$prev" == -c || "$prev" == -p || "$prev" == -w ]];then
-        touch "$ldf"
-        COMPREPLY=($( compgen -W "$(cat "$ldf")" -- "$cur"))
-      elif [[ "$prev" == -b ]];then
-        COMPREPLY=($( compgen -W "$(dirs -p)" -- "$cur"))
-      fi
+      case $prev in
+        -c)touch "$ldf" && d=$(cat "$ldf");;
+        -p)touch "$pdf" && d=$(cat "$pdf");;
+        -w)touch "$ldf" && d=$(cat "$wdf");;
+        -b)d=$(dirs -p);;
+        *)
+          touch "$ldf" && touch "$pdf" && d=$(cat "$ldf")$'\n'$(cat "$pdf")$'\n'$(dirs -p)
+          ;;
+      esac
+      COMPREPLY=($(echo "$d"|grep "$cur"))
       IFS=$orig_ifs
     }
     complete -F _cl cl
@@ -548,6 +621,6 @@ fi
 
 # Move to actual pwd {{{
 cdpwd () {
-  cd -P .
+  command cd "$(pwd -P)"
 }
 # }}}

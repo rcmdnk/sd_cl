@@ -30,7 +30,7 @@ export WINDOWDIRFILE=${WINDOWDIRFILE:-$HOME/.windowDir}
 # Number of store directories
 export NLASTDIR=${NLASTDIR:-20}
 
-# post cd (overwrite cd (Bash) or chpwd (Zsh)
+# post cd (overwrite cd (Bash) or chpwd (Zsh))
 export ISPOSTCD=${ISPOSTCD:-1}
 
 # COMPLETION

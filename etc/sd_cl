@@ -202,7 +202,8 @@ _sd_cl () { # main function {{{
         IFS="$_s_s"
         #_s_inputs=($(ls -F|grep "/$")) # Only visible directories
         _s_inputs=($(find . -type d -maxdepth 1|grep -v "^.$"|cut -d'/' -f2)) # All (including .*) directories
-        local inputs_tmp=($(find . -type l -maxdepth 1|cut -d'/' -f2)) # Symbolic links
+        local -a inputs_tmp
+        inputs_tmp=($(find . -type l -maxdepth 1|cut -d'/' -f2)) # Symbolic links
         local l
         for l in "${inputs_tmp[@]}";do
           if ls -l "$l"|grep "/$";then
@@ -244,7 +245,8 @@ _sd_cl () { # main function {{{
         [ $vim -eq 0 ] && [ $back -eq 0 ];then
       _s_align=0
       # Get variables
-      local all_inputs=()
+      local -a all_inputs
+      all_inputs=()
       _s_file=${LASTDIRFILE:-$HOME/.lastDir}
       _sf_get_values_wrapper
       all_inputs=("${all_inputs[@]}" "${_s_inputs[@]}")
@@ -271,12 +273,15 @@ _sd_cl () { # main function {{{
     if [ "$_s_dir" != "" ];then
       _s_align=0
       _sf_get_values_wrapper
+      _sf_get_values () {
+        :
+      }
 
       local orig_ifs=$IFS
       IFS="$_s_s"
       local v
       local -a d
-      d=( $(for v in "${_s_inputs[@]}";do echo "$v";done|sed "s|~|${HOME}|g"|grep "${_s_dir/#\~/${HOME}}"|sort|uniq) )
+      d=($(for v in "${_s_inputs[@]}";do echo "$v";done|sed "s|~|${HOME}|g"|grep "${_s_dir/#\~/${HOME}}"|sort|uniq))
       _s_inputs=("${d[@]}")
       _s_n=${#_s_inputs[@]}
       if [ $window -eq 1 ];then
@@ -412,8 +417,7 @@ if [ $NOCOMPLETION -eq 0 ];then
         '-w:: :->window'\
         '-b:: :->back'\
         '-v:: :->non'\
-        '-h:: :->non'\
-        '*:: :->xxx'
+        '-h:: :->non'
       local ldf=""
       if echo "$state"|grep -q non;then
         return 0
@@ -435,15 +439,9 @@ if [ $NOCOMPLETION -eq 0 ];then
         local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
         touch "$ldf"
         touch "$pdf"
-        local -a ld
-        local -a pd
-        local -a bd
-        ld=($(cat "$ldf"|sed "s|~|$HOME|"))
-        pd=($(cat "$pdf"|sed "s|~|$HOME|"))
-        bd=($(dirs -p|sed "s|~|$HOME|"))
-        _describe -t lastdir "Saved directories" ld
-        _describe -t predir "Pre defined directories" pd
-        _describe -t backdir "Last directories" bd
+        compadd $(cat "$ldf"|sed "s|~|$HOME|")
+        compadd $(cat "$pdf"|sed "s|~|$HOME|")
+        compadd $(dirs -p|sed "s|~|$HOME|")
       elif [ "$ldf" != "" ];then
         compadd $(cat $ldf|sed "s|~|$HOME|")
       else
@@ -467,16 +465,31 @@ if [ $NOCOMPLETION -eq 0 ];then
       COMPREPLY=()
       local cur=${COMP_WORDS[COMP_CWORD]}
       local prev=${COMP_WORDS[COMP_CWORD-1]}
+      local -a opts
+      local -a opts_nocomp
+      opts=(-l -c -C -n -N -p -w -b -v -h)
+      opts_nocomp=(-l -C -v -h)
+      local nocomp=0
+      local i
+      for i in $(seq 1 $((COMP_CWORD)));do
+        if [ "${COMP_WORDS[$i]}" = "" ] || [ "${COMP_WORDS[$i]}" = "-" ];then
+          continue
+        fi
+        if echo "${opts[@]}"|grep -q -- "${COMP_WORDS[$i]}";then
+          opts=($(echo "${opts[@]}"|sed "s/${COMP_WORDS[$i]}//"))
+          if echo "${opts_nocomp[@]}"|grep -q -- "${COMP_WORDS[$i]}";then
+            nocomp=1
+          fi
+        fi
+      done
 
       if [[ "$cur" == -* ]];then
-        COMPREPLY=($( compgen -W "-l -c -C -n -N -p -w -b -v -h" -- "$cur"))
+        COMPREPLY=($( compgen -W "${opts[*]}" -- "$cur"))
         return
-      elif [[ "$cur" == -l || "$cur" == -c || "$cur" == -C || "$cur" == -n ||\
-              "$cur" == -N || "$cur" == -p || "$cur" == -w || "$cur" == -b ||\
-              "$cur" == -v || "$cur" == -h ]];then
+      elif [ "${COMP_WORDS[$i]}" != "" ] && echo "${opts[@]}"|grep -q "$cur";then
         COMPREPLY=("$cur")
         return
-      elif [[ "$prev" == -l || "$prev" == -C || "$prev" == -v || "$prev" == -h ]];then
+      elif [ $nocomp -eq 1 ];then
         return
       elif [[ "$prev" != -* && $COMP_CWORD -ne 1 ]];then
         return

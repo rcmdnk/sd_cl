@@ -1,4 +1,4 @@
-sd_cl
+sd_cl (Save Directory and Change to the Last directly)
 =====
 
 Useful functions to change directories for Bash/Zsh and GNU screen/tmux.

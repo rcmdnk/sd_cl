@@ -248,10 +248,10 @@ _sd_cl () { # main function {{{
       local -a all_inputs
       all_inputs=()
       _s_file=${LASTDIRFILE:-$HOME/.lastDir}
-      _sf_get_values_wrapper
+      _sf_get_values_wrapper 0 0
       all_inputs=("${all_inputs[@]}" "${_s_inputs[@]}")
       _s_file=${PREDEFDIRFILE:-$HOME/.predefDir}
-      _sf_get_values_wrapper
+      _sf_get_values_wrapper 0 0
       all_inputs=("${all_inputs[@]}" "${_s_inputs[@]}")
       local orig_ifs=$IFS
       IFS="$_s_s"

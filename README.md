@@ -89,27 +89,36 @@ You can easily move to other window's directory.
 ### Options for cl
 Options for `cl` are here:
 
-    -l          Show saved directories
-    -c          Show saved directories and choose a directory
-    -C          Clear directories
-    <number>    Move to <number>-th last directory
-    -n <number> Move to <number>-th last directory (obsolete)
-    -N          No header for selection window
-    -p          Move to pre-defiend dirctory in $PREDEFDIRFILE
-    -w          Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
-    -v          Move from current directory, like Vim
-    -h          Print this HELP and quit
+    Usage: cl [-lcph] [-n <number> ] [<number>] [<directory>]
+    If there are no arguments, you will move to the last saved directory by sd command.
+    If you give any directory name, it searches for it in saved directories
+    and cd to there if only one is found.
+    If more than one directories are found, go to the selection mode.
+  
+    Arguments:
+       -l          Show saved directories
+       -c          Show saved directories and choose a directory
+       -C          Clear directories
+       <number>    Move to <number>-th last directory
+       -n <number> Move to <number>-th last directory (obsolete)
+       -N          No header for selection window
+       -p          Move to pre-defiend dirctory in /Users/kaneda/.predefDir
+       -w          Move to other window's (screen/tmux) dirctory in /Users/kaneda/.windowDir
+       -b          Move back to moving histories
+       -v          Move from current directory, like Vim
+       -h          Print this HELP and quit
 
-`-l`, `-c`, `-C`, `-N` and `-n` (`<number>`) are used exclusively.
+`-l`, `-c`, `-C` and `-n` (`<number>`) are used exclusively.
 
-`-p` (pre-defined directory list) or `-w` (window directory list)
+`-p` (pre-defined directory list), `-w` (window directory list),
+or `-b` (moving history)
 change the list file and can be used with other options.
 
 e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
 
 ### Saved directory list and cl selection mode example
 
-If you work w/o `-p` or `-w`, `cl` uses saved (by `sd`) directory list.
+If you work w/o `-p`, `-w` or `-b`, `cl` uses saved (by `sd`) directory list.
 
 If you use `-c`, `cl` starts selection mode. See below demo.
 
@@ -163,6 +172,7 @@ Tab completion is available both for Bash and Zsh.
     $ cl [Tab] # Completion with saved directory list.
     $ cl -p [Tab] # Completion with pre-defined directory list.
     $ cl -w [Tab] # Completion with window directory list.
+    $ cl -b [Tab] # Completion with moving history.
 
 If you give directory name to `cl`, you will just move to the directory like normal `cd`.
 

@@ -180,7 +180,7 @@ If you give directory name to `cl`, you will just move to the directory like nor
 
 Demonstration with Bash 4.3.42.
 
-![completion][http://rcmdnk.github.io/images/post/20160218_sd_cl.gif]
+![completion](http://rcmdnk.github.io/images/post/20160218_sd_cl.gif)
 
 * `sd`: Save current directory.
 * `cl -l`: Show the list.

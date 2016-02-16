@@ -176,6 +176,19 @@ Tab completion is available both for Bash and Zsh.
 
 If you give directory name to `cl`, you will just move to the directory like normal `cd`.
 
+### Demonstration
+
+Demonstration with Bash 4.3.42.
+
+![completion][http://rcmdnk.github.io/images/post/20160218_sd_cl.gif]
+
+* `sd`: Save current directory.
+* `cl -l`: Show the list.
+* `cl test<Tab>`: Completion with paths including `test`.
+* `cl test<Tab><Enter>`: Enter selection mode with paths including `test`.
+* `cl test3<Enter>`: Change directory to **/tmp/test/test3**, as it is an unique candidate for `test3`.
+* `cl -C`: Clear the list.
+
 ### Bonus alias/functions
 
 * bd (back to directory): alias for to `popd >/dev/null`

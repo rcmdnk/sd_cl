@@ -186,7 +186,7 @@ Demonstration with Bash 4.3.42.
 * `cl -l`: Show the list.
 * `cl test<Tab>`: Completion with paths including `test`.
 * `cl test<Tab><Enter>`: Enter selection mode with paths including `test`.
-* `cl test3<Enter>`: Change directory to **/tmp/test/test3**, as it is an unique candidate for `test3`.
+* `cl test2<Enter>`: Change directory to **/tmp/test/test2**, as it is an unique candidate for `test2`.
 * `cl -C`: Clear the list.
 
 ### Bonus alias/functions

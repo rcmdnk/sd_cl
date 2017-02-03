@@ -538,10 +538,10 @@ if [ -n "$STY" ];then
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
     touch "$wdf"
     if grep -q "^$WINDOW 0 " "$wdf";then
-      sed "s|^$WINDOW 0 .*$|$WINDOW 0 $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
+      sed "s|^$WINDOW 0 .*$|$WINDOW 0 $(pwd)|" "$wdf"|sort -n > "${wdf}.tmp"
       mv "${wdf}.tmp" "${wdf}"
     else
-      (cat "$wdf" && echo "$WINDOW 0 $(pwd)")|sort > "${wdf}.tmp"
+      (cat "$wdf" && echo "$WINDOW 0 $(pwd)")|sort -n > "${wdf}.tmp"
       mv "${wdf}.tmp" "${wdf}"
     fi
   }
@@ -552,10 +552,10 @@ elif [ -n "$TMUX" ];then
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
     touch "$wdf"
     if grep -q "^$window $pane " "$wdf";then
-      sed "s|^$window $pane .*$|$window $pane $(pwd)|" "$wdf"|sort > "${wdf}.tmp"
+      sed "s|^$window $pane .*$|$window $pane $(pwd)|" "$wdf"|sort -n > "${wdf}.tmp"
       mv "${wdf}.tmp" "${wdf}"
     else
-      (cat "$wdf" && echo "$window $pane $(pwd)")|sort > "${wdf}.tmp"
+      (cat "$wdf" && echo "$window $pane $(pwd)")|sort -n > "${wdf}.tmp"
       mv "${wdf}.tmp" "${wdf}"
     fi
   }

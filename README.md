@@ -35,8 +35,7 @@ If you want to install other directory, do like:
 
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
 
-    $ brew tap rcmdnk/rcmdnkpac
-    $ brew install sd_cl
+    $ brew install rcmdnk/rcmdnkpac/sd_cl
 
 If you have [brew file](https://github.com/rcmdnk/homebrew-file), add following lines to Brewfile:
 
@@ -104,6 +103,7 @@ Options for `cl` are here:
        -N          No header for selection window
        -p          Move to pre-defiend dirctory in ~/.predefDir
        -w          Move to other window's (screen/tmux) dirctory in ~/.windowDir
+       -r          Move to ranking directory in ~/.rankingDir
        -b          Move back to moving histories
        -v          Move from current directory, like Vim
        -h          Print this HELP and quit
@@ -111,6 +111,7 @@ Options for `cl` are here:
 `-l`, `-c`, `-C` and `-n` (`<number>`) are used exclusively.
 
 `-p` (pre-defined directory list), `-w` (window directory list),
+`-r` (ranking directory),
 or `-b` (moving history)
 change the list file and can be used with other options.
 
@@ -118,7 +119,7 @@ e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
 
 ### Saved directory list and cl selection mode example
 
-If you work w/o `-p`, `-w` or `-b`, `cl` uses saved (by `sd`) directory list.
+If you work w/o `-p`, `-w`, `-r`, or `-b`, `cl` uses saved (by `sd`) directory list.
 
 If you use `-c`, `cl` starts selection mode. See below demo.
 
@@ -160,6 +161,12 @@ e.g.:
 This command change the directory to the directory of Window 3.
 If it has several panes, it chooses the directory of the first pane.
 
+### Ranking directory
+
+If you use `-p`, it uses `ranking` directory list,
+which is defined by how much you went in with `cd` ($HOME directory is excluded).
+
+
 ### Vim like file explorer
 
 Option `-v` will give you the continuous selection mode to change the directory,
@@ -172,6 +179,7 @@ Tab completion is available both for Bash and Zsh.
     $ cl [Tab] # Completion with saved directory list.
     $ cl -p [Tab] # Completion with pre-defined directory list.
     $ cl -w [Tab] # Completion with window directory list.
+    $ cl -r [Tab] # Completion with ranking directory list.
     $ cl -b [Tab] # Completion with moving history.
 
 If you give directory name to `cl`, you will just move to the directory like normal `cd`.

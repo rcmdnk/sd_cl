@@ -27,6 +27,8 @@
 export LASTDIRFILE=${LASTDIRFILE:-$HOME/.lastDir}
 export PREDEFDIRFILE=${PREDEFDIRFILE:-$HOME/.predefDir}
 export WINDOWDIRFILE=${WINDOWDIRFILE:-$HOME/.windowDir}
+# ranking file
+export RANKINGDIRFILE=${RANKINGDIRFILE:-$HOME/.rankingDir}
 # Number of store directories
 export NLASTDIR=${NLASTDIR:-20}
 
@@ -39,6 +41,7 @@ export NOCOMPINIT=${NOCOMPLETION:-0}
 
 # cd wrap to pushd/popd
 export ISCDWRAP=${ISCDWRAP:-1}
+
 # }}}
 
 _sd_cl () { # main function {{{
@@ -103,6 +106,7 @@ _sd_cl () { # main function {{{
      -N          No header for selection window
      -p          Move to pre-defiend dirctory in $PREDEFDIRFILE
      -w          Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
+     -r          Move to ranking directory in $RANKINGDIRFILE
      -b          Move back to moving histories
      -v          Move from current directory, like Vim
      -h          Print this HELP and quit
@@ -112,6 +116,7 @@ _sd_cl () { # main function {{{
   local list=0
   local predef=0
   local window=0
+  local ranking=0
   local vim=0
   local back=0
   local cleardir=0
@@ -134,10 +139,11 @@ _sd_cl () { # main function {{{
         "-l" ) list=1;;
         "-c" ) _s_align=1;;
         "-n" ) _s_current_n="$2"; shift;;
-        "-p" ) predef=1; window=0; vim=0; back=0;;
-        "-w" ) window=1; predef=0; vim=0; back=0;;
-        "-v" ) vim=1; predef=0; window=0; back=0; _s_delete=0;;
-        "-b" ) back=1; vim=0; predef=0; window=0; _s_delete=0;;
+        "-p" ) predef=1; window=0; ranking=0; vim=0; back=0;;
+        "-w" ) window=1; predef=0; ranking=0; vim=0; back=0;;
+        "-r" ) ranking=1; predef=0; window=0; vim=0; back=0;;
+        "-v" ) vim=1; predef=0; window=0; ranking=0; back=0; _s_delete=0;;
+        "-b" ) back=1; vim=0; predef=0; window=0; ranking=0; _s_delete=0;;
         "-C" ) cleardir=1;;
         "-N" ) _s_noheader=1;;
         "-m" ) ;;
@@ -160,14 +166,16 @@ _sd_cl () { # main function {{{
     done
 
     # Set a file other than LASTDIRFILE
-    if [ $predef -eq 1 ] || [ $window -eq 1 ];then
+    if [ $predef -eq 1 ] || [ $window -eq 1 ] || [ $ranking -eq 1 ];then
       if [ $predef -eq 1 ];then
         _s_file=${PREDEFDIRFILE:-$HOME/.predefDir}
       elif [ $window -eq 1 ];then
         _s_file=${WINDOWDIRFILE:-$HOME/.windowDir}
-      elif [ $vim -eq 1 ] || [ $back -eq 1 ];then
-        _s_file=""
+      elif [ $ranking -eq 1 ];then
+        _s_file=${RANKINGDIRFILE:-$HOME/.rankingDir}
       fi
+    elif [ $vim -eq 1 ] || [ $back -eq 1 ];then
+      _s_file=""
     fi
 
     # List up
@@ -242,7 +250,7 @@ _sd_cl () { # main function {{{
 
     # Functions for no option, (-c + -p + -b)
     if [ $_s_align -eq 0 ] && [ $predef -eq 0 ] && [ $window -eq 0 ] &&\
-        [ $vim -eq 0 ] && [ $back -eq 0 ];then
+        [ $ranking -eq 0 ] && [ $vim -eq 0 ] && [ $back -eq 0 ];then
       _s_align=0
       # Get variables
       local -a all_inputs
@@ -286,6 +294,8 @@ _sd_cl () { # main function {{{
       _s_n=${#_s_inputs[@]}
       if [ $window -eq 1 ];then
         d=($(echo "${d[@]}"|cut -d' ' -f 3-))
+      elif [ $ranking -eq 1 ];then
+        d=($(echo "${d[@]}"|cut -d' ' -f 2-))
       fi
 
       if [ ${#d[@]} -eq 1 ];then
@@ -310,6 +320,8 @@ _sd_cl () { # main function {{{
     local dir="${_s_inputs[$_s_current_n]}"
     if [ $window -eq 1 ];then
       dir=$(grep "^$dir" $_s_file|head -n1|cut -d' ' -f 3-)
+    elif [ $ranking -eq 1 ];then
+      dir=$(grep "^$dir" $_s_file|head -n1|cut -d' ' -f 2-)
     fi
     cd "${dir/#\~/${HOME}}"
     echo "${dir}"
@@ -330,6 +342,8 @@ _sd_cl () { # main function {{{
         _s_header="$_s_header
  n Window Pane Directory"
       elif [ $predef -eq 1 ];then
+        :
+      elif [ $ranking -eq 1 ];then
         :
       elif [ $back -eq 1 ];then
         :
@@ -415,6 +429,7 @@ if [ $NOCOMPLETION -eq 0 ];then
         '-N:: :->xxx'\
         '-p:: :->predef'\
         '-w:: :->window'\
+        '-r:: :->ranking'\
         '-b:: :->back'\
         '-v:: :->non'\
         '-h:: :->non'
@@ -425,6 +440,8 @@ if [ $NOCOMPLETION -eq 0 ];then
         ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
       elif echo "$state"|grep -q window;then
         ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
+      elif echo "$state"|grep -q ranking;then
+        ldf=${RANKINGDIRFILE:-$HOME/.rankingDir}
       elif echo "$state"|grep -q back;then
         :
       elif echo "$state"|grep -q lastdir;then
@@ -443,7 +460,13 @@ if [ $NOCOMPLETION -eq 0 ];then
         compadd $(cat "$pdf"|sed "s|~|$HOME|")
         compadd $(dirs -p|sed "s|~|$HOME|")
       elif [ "$ldf" != "" ];then
-        compadd $(cat $ldf|sed "s|~|$HOME|")
+        if echo "$state"|grep -q window;then
+          compadd $(cat $ldf|cut -d' ' -f 3-|sed "s|~|$HOME|")
+        elif echo "$state"|grep -q ranking;then
+          compadd $(cat $ldf|cut -d' ' -f 2-|sed "s|~|$HOME|")
+        else
+          compadd $(cat $ldf|sed "s|~|$HOME|")
+        fi
       else
         compadd $(dirs -p|sed "s|~|$HOME|")
       fi
@@ -498,17 +521,19 @@ if [ $NOCOMPLETION -eq 0 ];then
       local ldf=${LASTDIRFILE:-$HOME/.lastDir}
       local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
       local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
+      local rdf=${RANKINGDIRFILE:-$HOME/.rankingDir}
       local d=""
 
       local orig_ifs=$IFS
       IFS=$'\n'
       case $prev in
-        -c)touch "$ldf" && d=$(cat "$ldf");;
-        -p)touch "$pdf" && d=$(cat "$pdf");;
-        -w)touch "$ldf" && d=$(cat "$wdf");;
-        -b)d=$(dirs -p);;
+        -c)touch "$ldf" && d=$(cat "$ldf"|sed "s|~|$HOME|");;
+        -p)touch "$pdf" && d=$(cat "$pdf"|sed "s|~|$HOME|");;
+        -w)touch "$ldf" && d=$(cat "$wdf"|cut -d' ' -f3-|sed "s|~|$HOME|");;
+        -r)touch "$rdf" && d=$(cat "$rdf"|cut -d' ' -f2-|sed "s|~|$HOME|");;
+        -b)d=$(dirs -p|sed "s|~|$HOME|");;
         *)
-          touch "$ldf" && touch "$pdf" && d=$(cat "$ldf")$'\n'$(cat "$pdf")$'\n'$(dirs -p)
+          touch "$ldf" && touch "$pdf" && d=$(cat "$ldf"|sed "s|~|$HOME|")$'\n'$(cat "$pdf"|sed "s|~|$HOME|")$'\n'$(dirs -p|sed "s|~|$HOME|")
           ;;
       esac
       COMPREPLY=($(echo "$d"|grep "$cur"))
@@ -530,11 +555,28 @@ fi
 # }}}
 
 # function for post cd in screen or tmux{{{
+cd_ranking () {
+  local curdir=$(pwd)
+  if [ "$curdir" = "$HOME" ];then
+    return
+  fi
+  local rdf=${RANKINGDIRFILE:-$HOME/.rankingDir}
+  touch "$rdf"
+  local n=$(grep " ${curdir}$" "$rdf"|cut -d" " -f1)
+  if [ -z "$n" ];then
+    echo "1 $curdir" >> "$rdf"
+  else
+    sed "s|${n} ${curdir}$|$((n+1)) ${curdir}|" "${rdf}" >> "${rdf}.tmp"
+    sort -rn "${rdf}.tmp" > "${rdf}"
+    rm -f "${rdf}.tmp"
+  fi
+}
 post_cd () {
-  :
+  cd_ranking
 }
 if [ -n "$STY" ];then
   post_cd () {
+    cd_ranking
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
     touch "$wdf"
     if grep -q "^$WINDOW 0 " "$wdf";then
@@ -547,6 +589,7 @@ if [ -n "$STY" ];then
   }
 elif [ -n "$TMUX" ];then
   post_cd () {
+    cd_ranking
     local window="$(tmux display -p '#I')"
     local pane="$(tmux display -p '#P')"
     local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}

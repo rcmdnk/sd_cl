@@ -10,14 +10,6 @@ then, call it from your `.bashrc` or `.zshrc` like
 
     source /path/to/sd_cl
 
-:white_check_mark: current version requires [sentaku](https://github.com/rcmdnk/sentaku).
-
-If you use Homebrew or cURL to insatll, sentaku will be installed automatically, too.
-
-If you directly get the script, please install sentaku or use
-[standalone version](https://github.com/rcmdnk/sd_cl/tree/standalone)
-(standalone version could be obsolete).
-
 ### cURL
 
 You can use an install script on the web like:
@@ -59,16 +51,14 @@ This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 
 Or, simply download scripts and set where you like.
 
-:warning: Install [sentaku](https://github.com/rcmdnk/sentaku), too.
-
 ## Usage
 
 ### Main functions: sd/cl
 
 `sd_cl` will load new functions:
 
-* `sd` (save dirctory)
-* `cl` (change to the last directory)
+* `sd` (Save Directory)
+* `cl` (Change to the Last directory)
 
 `sd` saves current directory to the directory history file.
 
@@ -78,50 +68,72 @@ If you give a directory name, it saves the given directory.
 
 If it is called w/o arguments, you will move to the last saved directory by `sd`.
 
-
 It is useful if you are working with GNU screen or tmux.
 You can easily move to other window's directory.
 
 * `sd` at Window 1 (e.g. directory: `~/usr/etc`).
 * `cl` at Window 2, then you are in `~/usr/etc` at Window 2, too.
 
-### Options for cl
-Options for `cl` are here:
+### Options for sd
 
-    Usage: cl [-lcph] [-n <number> ] [<number>] [<directory>]
+Options for `sd` are:
+
+    Usage: sd [-ecpwrCLh] [directory]
+
+    If neither '-e' nor '-C' is specified, 'directory' (or current directory if 'directory' is not given)
+    is stored in the list.
+
+    Arguments:
+       -e          Edit directory list file
+       -C          Clear directories
+       -c          Use the last directory file (~/.lastDir)
+       -p          Use the pre-defiend dirctory file (~/.predefDir)
+       -w          Use the window dirctory file (~/.windowDir)
+       -r          Use the ranking directory file (~/.rankingDir)
+       -L          Print license and quit
+       -h          Print this HELP and quit
+
+### Options for cl
+
+Options for `cl` are:
+
+    Usage: cl [-lcCpwrbvLh] [-n <number> ] [<directory>]
     If there are no arguments, you will move to the last saved directory by sd command.
     If you give any directory name, it searches for it in saved directories
     and cd to there if only one is found.
     If more than one directories are found, go to the selection mode.
-  
+
     Arguments:
        -l          Show saved directories
        -c          Show saved directories and choose a directory
        -C          Clear directories
-       <number>    Move to <number>-th last directory
-       -n <number> Move to <number>-th last directory (obsolete)
-       -N          No header for selection window
+       -n <number> Move to <number>-th last directory
        -p          Move to pre-defiend dirctory in ~/.predefDir
        -w          Move to other window's (screen/tmux) dirctory in ~/.windowDir
        -r          Move to ranking directory in ~/.rankingDir
        -b          Move back to moving histories
        -v          Move from current directory, like Vim
+       -L          Print license and quit
        -h          Print this HELP and quit
 
 `-l`, `-c`, `-C` and `-n` (`<number>`) are used exclusively.
 
 `-p` (pre-defined directory list), `-w` (window directory list),
-`-r` (ranking directory),
-or `-b` (moving history)
+`-r` (ranking directory), or `-b` (moving history)
 change the list file and can be used with other options.
 
-e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
+e.x.) `cl -p -n 3` moves to the 3rd directory stored in pre-defined directory list.
 
 ### Saved directory list and cl selection mode example
 
 If you work w/o `-p`, `-w`, `-r`, or `-b`, `cl` uses saved (by `sd`) directory list.
 
-If you use `-c`, `cl` starts selection mode. See below demo.
+If you use `-c`, `cl` starts selection mode.
+
+The selection mode is given by the tool defined by `SD_CL_TOOL`
+or any of installed tools listed in the Options section (sentaku, peco, fzf, etc...).
+
+The below is the demo of sentaku:
 
 > [sd_cl demo in asciinema](http://asciinema.org/a/6904)
 
@@ -140,10 +152,9 @@ In the selection mode, you can use:
 
 ### Pre-defined directory list
 
-If you use `-p`, it uses `pre-defined` directory list, which is not changed by `sd`.
+If you use `-p`, it uses `pre-defined` directory list.
 
-In normal selection mode (i.e. `cl -c`), you can select and put the directory
-to the `pre-defined` directory list (use `p` in the mode).
+You can update the pre-defined list by `sd -e -p`.
 
 ### Window directory list
 
@@ -152,20 +163,18 @@ You can change a directory to there by using `-w` option.
 
 It shows `window_number` `pane_number` (always 0 for GNU screen) and directory.
 
-You can select only with `window_number` or `window_number`+`pane_number`, too.
-
-e.g.:
-
-    $ cl -w 3
-
-This command change the directory to the directory of Window 3.
-If it has several panes, it chooses the directory of the first pane.
-
 ### Ranking directory
 
 If you use `-p`, it uses `ranking` directory list,
 which is defined by how much you went in with `cd` ($HOME directory is excluded).
 
+The list shows the number of cd to the directory.
+
+### Back to the history
+
+With `-b`, you can go back to the previous directories.
+This is available if `SD_CL_ISCDWRAP=1`,
+i.e. it uses the history of `pushd`.
 
 ### Vim like file explorer
 
@@ -207,54 +216,76 @@ Demonstration with Bash 4.3.42.
 
 Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
 
+    # Selection tool
+    export SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
+
+    # Number of kept last directories
+    export SD_CL_N=${SD_CL_N:-20}
+
     # Directory store file
-    export LASTDIRFILE=${LASTDIRFILE:-$HOME/.lastDir}
-    export PREDEFDIRFILE=${PREDEFDIRFILE:-$HOME/.predefDir}
-    export WINDOWDIRFILE=${WINDOWDIRFILE:-$HOME/.windowDir}
+    export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-$HOME/.lastDir}
+    export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-$HOME/.predefDir}
+    export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-$HOME/.windowDir}
+    export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
 
-    # Number of store directories
-    export NLASTDIR=${NLASTDIR:-20}
-    
-    # post cd (overwrite cd (Bash) or chpwd (Zsh)
-    export ISPOSTCD=${ISPOSTCD:-1}
-    
+    # post cd (overwrite cd (Bash) or chpwd (Zsh))
+    export SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
+
     # COMPLETION
-    export NOCOMPLETION=${NOCOMPLETION:-0}
-    export NOCOMPINIT=${NOCOMPLETION:-0}
-    
+    export SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
+    export SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
+
     # cd wrap to pushd/popd
-    export ISCDWRAP=${ISCDWRAP:-1}
+    export SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 
-First three values set directory list files for `saved`, `pre-defined` and `window`.
+    # Ranking method
+    export SD_CL_RANKING=${SD_CL_RANKING:-1}
 
-You can set maximum number of saved directories by `NLASTDIR` (default 20).
+First, you can decide selection tool as you like by `SD_CL_TOOL`.
+If it is not specified, it will searches followings:
 
-If you set `ISPOSTCD` to 0, it doesn't save window's directory
+* [sentaku](https://github.com/rcmdnk/sentaku),
+* [peco](https://github.com/peco/peco)
+* [percol](https://github.com/mooz/percol)
+* [fzf](https://github.com/junegunn/fzf)
+* [fzy](https://github.com/jhawthorn/fzy)
+* [selecta](https://github.com/garybernhardt/selecta)
+* [gof](https://github.com/mattn/gof)
+* [pick](https://github.com/mptre/pick)
+
+If it is "NONE" or no selection tool is installed,
+it invokes shell interactive mode.
+
+`SD_CL_N` defines how many directories are kept in the last directory file.
+
+Next four file names are file names for the last directories (default),
+predefined directories, window directories, and ranking directories, respectively.
+
+If you set `SD_CL_ISPOSTCD` to 0, it doesn't save window's directory
 in GNU screen or tmux.
 
-If you set `NOCOMPLETION` to 1, completion will be disabled.
+If you set `SD_CL_NOCOMPLETION` to 1, completion will be disabled.
 
 For Zsh user, if you already initialized completions with `compinit`,
-please set `export NOCOMPINIT=1`.
+please set `export SD_CL_NOCOMPINIT=1`.
 Otherwise `sd_cl` execute:
 
 
     autoload -Uz compinit
     compinit
 
-If you don't want to wrap `cd` with `pushd`, set `ISCDWRAP` to 0.
-
+If you don't want to wrap `cd` with `pushd`, set `SD_CL_ISCDWRAP` to 0.
 
 If you already have wrapper function for `cd` or the setting for `chpwd` at Zsh,
 you should be better to set:
 
-    export ISPOSTCD=0 # Don't do automatic save
-    export ISCDWRAP=0 # Don't wrap for pushd
+    export SD_CL_ISPOSTCD=0 # Don't do automatic save
+    export SD_CL_ISCDWRAP=0 # Don't wrap for pushd
 
 Otherwise `sd_cl` overwrites these functions.
 
 If you want to have automatic save in GNU screen/tmux with your `cd`/`chpwd`,
-first, set above ISPOSTCD and ISCDWRAP as 0 to disable to wrap in `sd_cl`,
+first, set above SD_CL_ISPOSTCD and SD_CL_ISCDWRAP as 0 to disable to wrap in `sd_cl`,
 then call `post_cd` in your `cd` function for Bash like:
 
     builtin cd "$@"
@@ -274,6 +305,11 @@ replace your `builtin(command) cd` command with
 i.e., if you want to enable both in Bash, you should replace above `builtin cd "$@"`
 with `wrap_cd "$@"`.
 
+`SD_CL_RANKING` sets the method to make a ranking list.
+
+* 0: Do not make a ranking list.
+* 1: Add a directory when cd is executed.
+* 2: Add a directory at any commands.
 
 ## References
 

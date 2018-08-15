@@ -1,97 +1,167 @@
 #!/bin/bash
-################################################################################# {{{
-#The MIT License (MIT)
-#
-#Copyright (c) 2013 rcmdnk
-#
-#Permission is hereby granted, free of charge, to any person obtaining a copy of
-#this software and associated documentation files (the "Software"), to deal in
-#the Software without restriction, including without limitation the rights to
-#use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-#the Software, and to permit persons to whom the Software is furnished to do so,
-#subject to the following conditions:
-#
-#The above copyright notice and this permission notice shall be included in all
-#copies or substantial portions of the Software.
-#
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-#FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-#COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-#IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-#CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-################################################################################# }}}
+
+# License {{{
+export SD_CL_LICENSE='The MIT License (MIT)
+
+Copyright (c) 2018 rcmdnk
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
+# }}}
 
 # Parameters {{{
+# Selection tool
+export SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
+
+# Number of kept last directories
+export SD_CL_N=${SD_CL_N:-20}
+
 # Directory store file
-export LASTDIRFILE=${LASTDIRFILE:-$HOME/.lastDir}
-export PREDEFDIRFILE=${PREDEFDIRFILE:-$HOME/.predefDir}
-export WINDOWDIRFILE=${WINDOWDIRFILE:-$HOME/.windowDir}
-# ranking file
-export RANKINGDIRFILE=${RANKINGDIRFILE:-$HOME/.rankingDir}
-# Number of store directories
-export NLASTDIR=${NLASTDIR:-20}
+export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-$HOME/.lastDir}
+export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-$HOME/.predefDir}
+export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-$HOME/.windowDir}
+export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
 
 # post cd (overwrite cd (Bash) or chpwd (Zsh))
-export ISPOSTCD=${ISPOSTCD:-1}
+export SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
 
 # COMPLETION
-export NOCOMPLETION=${NOCOMPLETION:-0}
-export NOCOMPINIT=${NOCOMPLETION:-0}
+export SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
+export SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
 
 # cd wrap to pushd/popd
-export ISCDWRAP=${ISCDWRAP:-1}
+export SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
+
+# Ranking method
+export SD_CL_RANKING=${SD_CL_RANKING:-1}
 
 # }}}
 
-_sd_cl () { # main function {{{
-  # source sentaku
-  if ! type sentaku >& /dev/null ;then
-    echo "sd_cl needs sentaku"
-    echo "Please install: https://github.com/rcmdnk/sentaku"
-    return 1
+# main functions {{{
+
+sd () {
+  # Help
+  local help="
+  Usage: sd [-ecpwrCLh] [directory]
+
+  If neither '-e' nor '-C' is specified, 'directory' (or current directory if 'directory' is not given)
+  is stored in the list.
+
+  Arguments:
+     -e          Edit directory list file
+     -C          Clear directories
+     -c          Use the last directory file ($SD_CL_LASTDIR_FILE)
+     -p          Use the pre-defiend dirctory file ($SD_CL_PREDEF_FILE)
+     -w          Use the window dirctory file ($SD_CL_WINDOW_FILE)
+     -r          Use the ranking directory file ($SD_CL_RANKING_FILE)
+     -L          Print license and quit
+     -h          Print this HELP and quit
+"
+
+  # Variables
+  local edit=0
+  local cleardir=0
+  local file=${SD_CL_LASTDIR_FILE}
+  local dir=""
+
+  # Get arguments
+  while [ $# -gt 0 ];do
+    case $1 in
+      "-e" ) edit=1;;
+      "-c" ) file=${SD_CL_LASTDIR_FILE};mode="lastdir";;
+      "-p" ) file=${SD_CL_PREDEF_FILE};mode="predef";;
+      "-w" ) file=${SD_CL_WINDOW_FILE};mode="window";;
+      "-r" ) file=${SD_CL_RANKING_FILE};mode="ranking";;
+      "-C" ) cleardir=1;;
+      "-L" ) echo "$SD_CL_LICENSE"; return;;
+      "-h" )
+        echo "$help"|${PAGER:-less} >/dev/tty
+        return
+        ;;
+      "--" ) shift; dir="$*"; break;;
+      * ) dir="$*" ;;
+    esac
+    shift
+  done
+
+  # Edit predefined dir
+  if [ $edit -eq 1 ];then
+    ${EDITOR:-"vi"} "$file"
+    return
   fi
-  source sentaku -n
 
-  # Set values
-  local _SENTAKU_INPUT_FILE=${LASTDIRFILE:-$HOME/.lastDir}
-  local _SENTAKU_MAX="${NLASTDIR:-20}"
-  local _SENTAKU_SEPARATOR=$'\n'
-  local _SENTAKU_SHOWLAST=1
+  # Clear
+  if [ $cleardir -eq 1 ];then
+    : > "$file"
+    return
+  fi
 
-  # sd or cl?
-  local sdcl=$1
-  shift
-  if [ "$sdcl" = "sd" ];then
-    # Edit predefined dir
-    if [ $# -eq 1 ] && [ "$1" = "-e" ];then
-      ${EDITOR:-"vi"} "${PREDEFDIRFILE:-$HOME/.predefDir}"
-      return 0
-    fi
-    # Set Save Dir
-    local curdir="$*"
-    if [ $# -eq 0 ];then
-      # Current directory
-      curdir=$(echo $(pwd)|sed "s|^$HOME|\~|")
-    fi
+  # Set Save Dir
+  if [ "$dir" = "" ];then
+    # Current directory
+    dir=$(pwd)
+    dir=${dir/^$HOME/\~/}
+  fi
 
-    if [ ! -d "${curdir/\~/$HOME}" ];then
-      echo "$curdir: No such directory"
-      return 1
+  if [ ! -d "${curdir/\~/$HOME}" ];then
+    echo "$curdir: No such directory"
+    return 1
+  else
+    touch "$file"
+    local pre_list="$(grep -v "^${curdir}$" < "$file"|head -n"$((SD_CL_N-1))")"
+    echo "$curdir" > "$file"
+    echo "$pre_list" >> "$file"
+  fi
+}
+
+cl () {
+  # Change to the last dir
+  if [ $# -eq 0 ];then
+    touch "${SD_CL_LASTDIR_FILE}"
+    local ld="$(head -n1 "${SD_CL_LASTDIR_FILE}")"
+    if [ "$ld" != "" ];then
+      eval command cd "$ld" # eval to expand ~
+      return
     else
-      _sf_main -p "$curdir" >/dev/null
+      echo "There is no saved directory."
+      return 1
     fi
-    return $?
-  elif [ "$sdcl" != "cl" ];then
-    echo "Usage: _sd_cl <sd or cl> [arg1 [arg2 [...]]]"
-    return 1
   fi
 
-  # cl
+  # Set selection tool
+  local selection=""
+  if type "$SD_CL_TOOL" >& /dev/null ;then
+    selection=$SD_CL_TOOL
+  elif [ "$SD_CL_TOOL" != "NONE" ];then
+    local tool
+    for tool in sentaku peco percol fzf fzy selecta gof pick;do
+      if type $tool >& /dev/null ;then
+        selection=$tool
+        break
+      fi
+    done
+  fi
+  if [ $selection = "sentaku" ];then
+    selection="sentaku -s line"
+  fi
 
   # Help
-  local _s_help="
-  Usage: cl [-lcph] [-n <number> ] [<number>] [<directory>]
+  local help="
+  Usage: cl [-lcCpwrbvLh] [-n <number> ] [<number>] [<directory>]
   If there are no arguments, you will move to the last saved directory by sd command.
   If you give any directory name, it searches for it in saved directories
   and cd to there if only one is found.
@@ -101,319 +171,176 @@ _sd_cl () { # main function {{{
      -l          Show saved directories
      -c          Show saved directories and choose a directory
      -C          Clear directories
-     <number>    Move to <number>-th last directory
-     -n <number> Move to <number>-th last directory (obsolete)
-     -N          No header for selection window
-     -p          Move to pre-defiend dirctory in $PREDEFDIRFILE
-     -w          Move to other window's (screen/tmux) dirctory in $WINDOWDIRFILE
-     -r          Move to ranking directory in $RANKINGDIRFILE
+     -n <number> Move to <number>-th last directory
+     -p          Move to pre-defiend dirctory in $SD_CL_PREDEF_FILE
+     -w          Move to other window's (screen/tmux) dirctory in $SD_CL_WINDOW_FILE
+     -r          Move to ranking directory in $SD_CL_RANKING_FILE
      -b          Move back to moving histories
      -v          Move from current directory, like Vim
+     -L          Print license and quit
      -h          Print this HELP and quit
 "
 
-  # Initialize variables
+  # Variables
   local list=0
-  local predef=0
-  local window=0
-  local ranking=0
-  local vim=0
-  local back=0
+  local mode="lastdir"
   local cleardir=0
+  local n=""
   local dir=""
+  local file=${SD_CL_LASTDIR_FILE}
 
-  _sf_initialize_user () {
-    _s_delete=1
-    _s_dir=""
-  }
-  _sf_finalize_user () {
-    unset _s_delete
-    unset _s_dir
-  }
+  # Get arguments
+  while [ $# -gt 0 ];do
+    case $1 in
+      "-l" ) list=1;;
+      "-c" ) file=${SD_CL_LASTDIR_FILE};mode="lastdir";;
+      "-n" ) n="$2"; shift;;
+      "-p" ) file=${SD_CL_PREDEF_FILE};mode="predef";;
+      "-w" ) file=${SD_CL_WINDOW_FILE};mode="window";;
+      "-r" ) file=${SD_CL_RANKING_FILE};mode="ranking";;
+      "-v" ) file="";mode="vim";;
+      "-b" ) file="";mode="back";;
+      "-C" ) cleardir=1;;
+      "-L" ) echo "$SD_CL_LICENSE"; return;;
+      "-h" )
+        echo "$help"|${PAGER:-less} >/dev/tty
+        return
+        ;;
+      "--" ) shift; dir="$*"; break;;
+      * ) dir="$*" ;;
+    esac
+    shift
+  done
 
-  _sf_check_args () { # {{{
-    # Get arguments
-    _s_continue=0
-    while [ $# -gt 0 ];do
-      case $1 in
-        "-l" ) list=1;;
-        "-c" ) _s_align=1;;
-        "-n" ) _s_current_n="$2"; shift;;
-        "-p" ) predef=1; window=0; ranking=0; vim=0; back=0;;
-        "-w" ) window=1; predef=0; ranking=0; vim=0; back=0;;
-        "-r" ) ranking=1; predef=0; window=0; vim=0; back=0;;
-        "-v" ) vim=1; predef=0; window=0; ranking=0; back=0; _s_delete=0;;
-        "-b" ) back=1; vim=0; predef=0; window=0; ranking=0; _s_delete=0;;
-        "-C" ) cleardir=1;;
-        "-N" ) _s_noheader=1;;
-        "-m" ) ;;
-        "-h" )
-          echo "$_s_help"|${PAGER:-less} >/dev/tty
-          return 0
-          ;;
-        "--" ) shift; _s_dir="$*"; break;;
-        * )
-          if [ "$1" != "/" ] && expr "$1" : "[0-9]*" >/dev/null;then
-            _s_current_n=$1
-            break
-          else
-            _s_dir="$*"
-            break
-          fi
-          ;;
-      esac
-      shift
-    done
-
-    # Set a file other than LASTDIRFILE
-    if [ $predef -eq 1 ] || [ $window -eq 1 ] || [ $ranking -eq 1 ];then
-      if [ $predef -eq 1 ];then
-        _s_file=${PREDEFDIRFILE:-$HOME/.predefDir}
-      elif [ $window -eq 1 ];then
-        _s_file=${WINDOWDIRFILE:-$HOME/.windowDir}
-      elif [ $ranking -eq 1 ];then
-        _s_file=${RANKINGDIRFILE:-$HOME/.rankingDir}
-      fi
-    elif [ $vim -eq 1 ] || [ $back -eq 1 ];then
-      _s_file=""
+  # Clear
+  if [ $cleardir -eq 1 ];then
+    if [ "$file" != "" ];then
+      : > "$file"
+    elif [ $mode = "back" ];then
+      dirs -c
     fi
+    return
+  fi
 
-    # List up
-    if [ $list -eq 1 ];then
-      if [ "$_s_file" != "" ];then
-        local i=0
-        while read line;do
-          printf "%3d %s\n" $i "$(echo $line|sed "s|^$HOME|\~|")"
-          ((i++))
-        done < $_s_file
-      elif [ $back -eq 1 ];then
-        dirs -v -p
-      fi
-      return 0
-    fi
-
-    # Clear
-    if [ $cleardir -eq 1 ];then
-      if [ "$_s_file" != "" ];then
-        echo -n > $_s_file
-      elif [ $back -eq 1 ];then
-        dirs -c
-      fi
-      return 0
-    fi
-
-    # Functions for vim mode
-    if [ $vim -eq 1 ];then
-      _sf_get_values () {
-        # Get variables
-        local orig_ifs=$IFS
-        IFS="$_s_s"
-        #_s_inputs=($(ls -F|grep "/$")) # Only visible directories
-        _s_inputs=($(find . -type d -maxdepth 1|grep -v "^.$"|cut -d'/' -f2)) # All (including .*) directories
-        local -a inputs_tmp
-        inputs_tmp=($(find . -type l -maxdepth 1|cut -d'/' -f2)) # Symbolic links
-        local l
-        for l in "${inputs_tmp[@]}";do
-          if ls -l "$l"|grep "/$";then
-            _s_inputs=("${_s_inputs[@]}" "$l")
-          fi
-        done
-        if [ "$(pwd)" != "/" ];then
-          _s_inputs=(".." "${_s_inputs[@]}")
-        fi
-        # Sort
-        _s_inputs=($(echo "${_s_inputs[*]}"|sort))
-        IFS=$orig_ifs
-        _s_n=${#_s_inputs[@]}
-        local i
-        for i in $(seq 0 $((_s_n-1)));do
-          _s_v_selected[$i]=0
-        done
-      }
-    fi
-
-    # Functions for back mode
-    if [ $back -eq 1 ];then
-      _sf_get_values () {
-        # Get variables
-        local orig_ifs=$IFS
-        IFS="$_s_s"
-        _s_inputs=($(dirs -p))
-        IFS=$orig_ifs
-        _s_n=${#_s_inputs[@]}
-        local i
-        for i in $(seq 0 $((_s_n-1)));do
-          _s_v_selected[$i]=0
-        done
-      }
-    fi
-
-    # Functions for no option, (-c + -p + -b)
-    if [ $_s_align -eq 0 ] && [ $predef -eq 0 ] && [ $window -eq 0 ] &&\
-        [ $ranking -eq 0 ] && [ $vim -eq 0 ] && [ $back -eq 0 ];then
-      _s_align=0
+  # Set dirs
+  # Functions for vim mode
+  if [ -n "$file" ];then
+    _get_dirs () {
+      local i=0
+      local d
+      while read -r d;do
+        dirs=("${dirs[@]}" "$d")
+      done < $file
+    }
+  elif [ $mode = vim ];then
+    _get_dirs () {
       # Get variables
-      local -a all_inputs
-      all_inputs=()
-      _s_file=${LASTDIRFILE:-$HOME/.lastDir}
-      _sf_get_values_wrapper 0 0
-      all_inputs=("${all_inputs[@]}" "${_s_inputs[@]}")
-      _s_file=${PREDEFDIRFILE:-$HOME/.predefDir}
-      _sf_get_values_wrapper 0 0
-      all_inputs=("${all_inputs[@]}" "${_s_inputs[@]}")
       local orig_ifs=$IFS
-      IFS="$_s_s"
-      _s_inputs=("${all_inputs[@]}" $(dirs -p))
-      IFS=$orig_ifs
-      _s_file=""
-      _s_n=${#_s_inputs[@]}
-      _s_v_selected=()
-      local i
-      for i in $(seq 0 $((_s_n-1)));do
-        _s_v_selected=(${_s_v_selected[@]} 0)
+      IFS=$'\n'
+      for d in $(ls -a);do
+        if [ "$d" = "." ];then
+          continue
+        elif [ ! -d "$d" ];then
+          continue
+        fi
+        dirs=("${dirs[@]}" "$d")
       done
-      _sf_get_values () {
-        :
-      }
-    fi
-
-    # Change to given directory
-    if [ "$_s_dir" != "" ];then
-      _s_align=0
-      _sf_get_values_wrapper
-      _sf_get_values () {
-        :
-      }
-
-      local orig_ifs=$IFS
-      IFS="$_s_s"
-      local v
-      local -a d
-      d=($(for v in "${_s_inputs[@]}";do echo "$v";done|sed "s|~|${HOME}|g"|grep "${_s_dir/#\~/${HOME}}"|sort|uniq))
-      _s_inputs=("${d[@]}")
-      _s_n=${#_s_inputs[@]}
-      if [ $window -eq 1 ];then
-        d=($(echo "${d[@]}"|cut -d' ' -f 3-))
-      elif [ $ranking -eq 1 ];then
-        d=($(echo "${d[@]}"|cut -d' ' -f 2-))
-      fi
-
-      if [ ${#d[@]} -eq 1 ];then
-        _s_current_n=0
-        return 0
-      elif [ ${#d[@]} -eq 0 ];then
-        echo "No such a directory is stored: ${_s_dir}"
-        return 1
-      fi
       IFS=$orig_ifs
-    fi
+    }
+  elif [ $mode = back ];then
+    _get_dirs () {
+      # Get variables
+      local orig_ifs=$IFS
+      IFS=$'\n'
+      dirs=($(dirs -p))
+      IFS=$orig_ifs
+    }
+  fi
+  local dirs=()
+  _get_dirs
 
-    _s_continue=1
-    return 0
-  } # }}}
+  # List up
+  if [ $list -eq 1 ];then
+    local d
+    local i=0
+    for d in "${dirs[@]}";do
+      printf "%3d %s\\n" $i "${d/^$HOME/\~}"
+      ((i++))
+    done
+    return
+  fi
 
-  _sf_execute () { # {{{
-    if [ $back -eq 1 ];then
-      pushd +${_s_current_n} >/dev/null
-      return
-    fi
-    local dir="${_s_inputs[$_s_current_n]}"
-    if [ $window -eq 1 ];then
-      dir=$(grep "^$dir" $_s_file|head -n1|cut -d' ' -f 3-)
-    elif [ $ranking -eq 1 ];then
-      dir=$(grep "^$dir" $_s_file|head -n1|cut -d' ' -f 2-)
-    fi
-    cd "${dir/#\~/${HOME}}"
-    echo "${dir}"
-  } # }}}
-
-  _sf_set_header () { # {{{
-    _s_header=""
-    if [ $_s_noheader = 1 -o $_s_lines -lt 10 ];then
-      return
-    fi
-    if [ $_s_cols -ge 42 ];then
-      _s_header=" $_s_n directories in total
- vimike updown, e.g)j:down, k:up, gg/G
- Enter/Space(select), q(quit), d(delete)"
-      if [ $vim -eq 1 ];then
-        :
-      elif [ $window -eq 1 ];then
-        _s_header="$_s_header
- n Window Pane Directory"
-      elif [ $predef -eq 1 ];then
-        :
-      elif [ $ranking -eq 1 ];then
-        :
-      elif [ $back -eq 1 ];then
-        :
-      else
-        _s_header="$_s_header
- p(put to pre-defined)"
+  # Change to given directory
+  if [ "$dir" != "" ];then
+    local d
+    dirs_tmp=()
+    for d in "${dirs[@]}";do
+      if echo "$d" |grep -q "$dir";then
+        dirs_tmp=("${dirs_tmp[@]}" "$d")
       fi
-      _s_header="$_s_header\n"
-    fi
-  }  # }}}
-
-  _sf_p () { # {{{
-    _s_is_print=0
-    if [ $predef -eq 1 ] || [ $vim -eq 1 ] || [ $back -eq 1 ];then
-      return
-    fi
-    local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
-    touch "$pdf"
-    if ! grep -q "^${_s_inputs[$_s_current_n]}$" "$pdf";then
-      echo "${_s_inputs[$_s_current_n]}" >> "$pdf"
-      _sf_echo_printall "${_s_inputs[$_s_current_n]} was pushed in $pdf"
-    fi
-  } # }}}
-
-  _sf_select () { # {{{
-    if [ $vim -eq 1 ];then
-      if [ -d "${_s_inputs[$_s_current_n]}" ];then
-        cd "${_s_inputs[$_s_current_n]}"
-        _sf_get_values
-        _sf_reset
-      else
-        _sf_echo "${_s_inputs[$_s_current_n]} is not a directory"
-      fi
-    elif [ $vim -eq 0 ];then
-      _s_break=1
-      return
-    fi
-  } # }}}
-
-  _sf_main -m "$@"
-} # }}}
-
-sd () { # Save dir {{{
-  _sd_cl sd "$@"
-} # }}}
-
-cl () { # Change directory to the Last directory {{{
-
-  # Change to the last dir
-  if [ $# -eq 0 ];then
-    local ld="$(head -n1 "${LASTDIRFILE:-$HOME/.lastDir}")"
-    if [ "$ld" != "" ];then
-      eval cd "$ld" # eval to expand ~
-      echo "$ld"
-      return 0
-    else
-      echo "There is no saved directory."
-      return 1
+    done
+    dirs=()
+    for d in "${dirs_tmp[@]}";do
+      dirs=("${dirs[@]}" "$d")
+    done
+    if [ "${#dirs[@]}" -eq 0 ];then
+      echo "No such a directory is stored for $mode: ${dir}"
+      return 2
     fi
   fi
 
-  # sd_cl
-  _sd_cl cl "$@"
+  while :;do
+    if [ -n "$selection" ];then
+      dir=$(for d in "${dirs[@]}";do echo "$d";done|$selection)
+    else
+      local d
+      local i=$((${#dirs[@]}-1))
+      while [ $i -ge 0 ];do
+        printf "%3d: %s\\n" $i "${dirs[$i]}"
+        ((i--))
+      done
+      printf "\\nChoose directory number: "
+      local i
+      read -r i
+      if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
+        echo "$i is not valid."
+        echo "Enter [0-$((${#dirs[@]}-1))]"
+        return 3
+      fi
+      dir=${dirs[$i]}
+    fi
+    if [ -z "$dir" ];then
+      return
+    fi
 
+    if [ $mode = vim ];then
+      eval command cd "${dir}"
+      dirs=()
+      _get_dirs
+    else
+      break
+    fi
+  done
+
+  if [ $mode = back ];then
+    local n
+    n=$(dirs -p -v|grep " $dir$"|head -n1|awk '{print $1}')
+    command pushd +"${n}" >/dev/null
+    return
+  fi
+
+  if [ $mode = window ];then
+    dir=$(echo $dir|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
+  elif [ $mode = ranking ];then
+    dir=$(echo $dir|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
+  fi
+  eval command cd "${dir}"
 } # }}}
 
 # Completion {{{
-if [ $NOCOMPLETION -eq 0 ];then
+if [ $SD_CL_NOCOMPLETION -eq 0 ];then
   if [ "$ZSH_VERSION" != "" ];then
-    if [ $NOCOMPINIT -eq 0 ];then
+    if [ $SD_CL_NOCOMPINIT -eq 0 ];then
       autoload -Uz compinit
       compinit
     fi
@@ -435,25 +362,25 @@ if [ $NOCOMPLETION -eq 0 ];then
         '-h:: :->non'
       local ldf=""
       if echo "$state"|grep -q non;then
-        return 0
+        return
       elif echo "$state"|grep -q predef;then
-        ldf=${PREDEFDIRFILE:-$HOME/.predefDir}
+        ldf=${SD_CL_PREDEF_FILE}
       elif echo "$state"|grep -q window;then
-        ldf=${WINDOWDIRFILE:-$HOME/.windowDir}
+        ldf=${SD_CL_WINDOW_FILE}
       elif echo "$state"|grep -q ranking;then
-        ldf=${RANKINGDIRFILE:-$HOME/.rankingDir}
+        ldf=${SD_CL_RANKING_FILE}
       elif echo "$state"|grep -q back;then
         :
       elif echo "$state"|grep -q lastdir;then
-        ldf=${LASTDIRFILE:-$HOME/.lastDir}
+        ldf=${SD_CL_LASTDIR_FILE}
       else
         ldf=all
       fi
       local orig_ifs=$IFS
       IFS=$'\n'
       if [ "$ldf" = "all" ];then
-        ldf=${LASTDIRFILE:-$HOME/.lastDir}
-        local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
+        ldf=${SD_CL_LASTDIR_FILE}
+        local pdf=${SD_CL_PREDEF_FILE}
         touch "$ldf"
         touch "$pdf"
         compadd $(cat "$ldf"|sed "s|~|$HOME|")
@@ -518,10 +445,10 @@ if [ $NOCOMPLETION -eq 0 ];then
         return
       fi
 
-      local ldf=${LASTDIRFILE:-$HOME/.lastDir}
-      local pdf=${PREDEFDIRFILE:-$HOME/.predefDir}
-      local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
-      local rdf=${RANKINGDIRFILE:-$HOME/.rankingDir}
+      local ldf=${SD_CL_LASTDIR_FILE}
+      local pdf=${SD_CL_PREDEF_FILE}
+      local wdf=${SD_CL_WINDOW_FILE}
+      local rdf=${SD_CL_RANKING_FILE}
       local d=""
 
       local orig_ifs=$IFS
@@ -554,59 +481,59 @@ if [ $NOCOMPLETION -eq 0 ];then
 fi
 # }}}
 
-# function for post cd in screen or tmux{{{
-cd_ranking () {
+# ranking {{{
+_cd_ranking () {
   local curdir=$(pwd)
   if [ "$curdir" = "$HOME" ];then
     return
   fi
-  local rdf=${RANKINGDIRFILE:-$HOME/.rankingDir}
+  curdir=${curdir/^$HOME/\~}
+  local rdf=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
   touch "$rdf"
   local n=$(grep " ${curdir}$" "$rdf"|cut -d" " -f1)
   if [ -z "$n" ];then
     echo "1 $curdir" >> "$rdf"
   else
-    sed "s|${n} ${curdir}$|$((n+1)) ${curdir}|" "${rdf}" >> "${rdf}.tmp"
-    sort -rn "${rdf}.tmp" > "${rdf}"
-    rm -f "${rdf}.tmp"
+    local rd=$(sed "s|${n} ${curdir}$|$((n+1)) ${curdir}|" "${rdf}"|sort -rn)
+    echo "$rd" > "${rdf}"
   fi
 }
-post_cd () {
-  cd_ranking
-}
-if [ -n "$STY" ];then
-  post_cd () {
-    cd_ranking
-    local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
-    touch "$wdf"
-    if grep -q "^$WINDOW 0 " "$wdf";then
-      sed "s|^$WINDOW 0 .*$|$WINDOW 0 $(pwd)|" "$wdf"|sort -n > "${wdf}.tmp"
-      mv "${wdf}.tmp" "${wdf}"
-    else
-      (cat "$wdf" && echo "$WINDOW 0 $(pwd)")|sort -n > "${wdf}.tmp"
-      mv "${wdf}.tmp" "${wdf}"
-    fi
-  }
-elif [ -n "$TMUX" ];then
-  post_cd () {
-    cd_ranking
-    local window="$(tmux display -p '#I')"
-    local pane="$(tmux display -p '#P')"
-    local wdf=${WINDOWDIRFILE:-$HOME/.windowDir}
-    touch "$wdf"
-    if grep -q "^$window $pane " "$wdf";then
-      sed "s|^$window $pane .*$|$window $pane $(pwd)|" "$wdf"|sort -n > "${wdf}.tmp"
-      mv "${wdf}.tmp" "${wdf}"
-    else
-      (cat "$wdf" && echo "$window $pane $(pwd)")|sort -n > "${wdf}.tmp"
-      mv "${wdf}.tmp" "${wdf}"
-    fi
-  }
+
+if [ "$SD_CL_RANKING" -eq 2 ];then
+  PROMPT_COMMAND="${PROMPT_COMMAND:+${PROMPT_COMMAND};}_cd_ranking"
 fi
 # }}}
 
+# function for post cd {{{
+_post_cd () {
+  if [ "$SD_CL_RANKING" -eq 1 ];then
+    _cd_ranking
+  fi
+  if [ -z "$STY" ] && [ -z "$TMUX" ];then
+    return
+  fi
+  if [ -n "$STY" ];then
+    local window="$WINDOW"
+    local pane=0
+  else
+    local window="$(tmux display -p '#I')"
+    local pane="$(tmux display -p '#P')"
+  fi
+  local wdf=${SD_CL_WINDOW_FILE}
+  touch "$wdf"
+  local d="$(pwd)"
+  d="${d/^$HOME\~}"
+  if grep -q "^$window $pane " "$wdf";then
+    local wd=$(sed "s|^$window $pane .*$|$window $pane $d|" "$wdf"|sort -n)
+  else
+    local wd=$(cat "$wdf" && echo "$window $pane $d"|sort -n)
+  fi
+  echo "$wd" > "${wdf}"
+}
+# }}}
+
 # function for cd wrap to pushd/popd {{{
-wrap_cd () {
+_wrap_cd () {
   local dir="$*"
   if [ "$*" = "" ];then
     if [ "$(pwd)" = "$HOME" ];then
@@ -638,38 +565,38 @@ bd () {
 
 # Set cd/chpwd {{{
 if [ "$ZSH_VERSION" != "" ];then
-  if [ $ISPOSTCD -eq 1 ];then
+  if [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     chpwd () {
-      post_cd
+      _post_cd
     }
   fi
-  if [ $ISCDWRAP -eq 1 ];then
+  if [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      wrap_cd "$*"
+      _wrap_cd "$*"
     }
   fi
 else
-  if [ $ISPOSTCD -eq 1 ] && [ $ISCDWRAP -eq 1 ];then
+  if [ "$SD_CL_ISPOSTCD" -eq 1 ] && [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      wrap_cd "$*"
+      _wrap_cd "$*"
       local ret=$?
       if [ $ret -eq 0 ];then
-        post_cd
+        _post_cd
       fi
       return $ret
     }
-  elif [ $ISPOSTCD -eq 1 ];then
+  elif [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     cd () {
       builtin cd "$*"
       local ret=$?
       if [ $ret -eq 0 ];then
-        post_cd
+        _post_cd
       fi
       return $ret
     }
-  elif [ $ISCDWRAP -eq 1 ];then
+  elif [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      wrap_cd "$*"
+      _wrap_cd "$*"
     }
   fi
 fi

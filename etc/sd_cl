@@ -26,7 +26,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
 # Fixed Parameters {{{
 readonly SD_CL_RETURN_NO_SUCH_DIRECTORY=10
 readonly SD_CL_RETURN_NO_SAVED_DIRECTORY=11
-readonly SD_CL_RETURN_NO_SUCH_DIRECTORY=12
+readonly SD_CL_RETURN_NOT_STORED=12
 readonly SD_CL_RETURN_INVALID_INPUT=13
 # }}}
 
@@ -125,7 +125,7 @@ sd () {
   fi
 
   if [ ! -d "${curdir/\~/$HOME}" ];then
-    echo "$curdir: No such directory"
+    echo "$curdir: No such a directory"
     return $SD_CL_RETURN_NO_SUCH_DIRECTORY
   else
     touch "$file"
@@ -216,7 +216,7 @@ cl () {
         ;;
       "--" ) shift; dir="$*"; break;;
       * )
-        if [ "$1" != "/" ] && expr "$1" : "[0-9]*" >/dev/null;then
+        if expr "$1" : "[0-9]*" >/dev/null;then
           n=$1
         else
           dir="$*"
@@ -300,7 +300,7 @@ cl () {
     done
     if [ "${#dirs[@]}" -eq 0 ];then
       echo "No such a directory is stored for $mode: ${dir}"
-      return $SD_CL_RETURN_NO_SUCH_DIRECTORY
+      return $SD_CL_RETURN_NOT_STORED
     fi
   fi
 

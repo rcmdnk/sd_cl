@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# License {{{
-readonly SD_CL_LICENSE='The MIT License (MIT)
+# License {{
+_SD_CL_LICENSE='The MIT License (MIT)
 
 Copyright (c) 2018 rcmdnk
 
@@ -24,10 +24,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
 # }}}
 
 # Fixed Parameters {{{
-readonly SD_CL_ERROR_NO_SUCH_DIRECTORY=10
-readonly SD_CL_ERROR_NO_SAVED_DIRECTORY=11
-readonly SD_CL_ERROR_NOT_STORED=12
-readonly SD_CL_ERROR_INVALID_INPUT=13
+_SD_CL_ERROR_NO_SUCH_DIRECTORY=10
+_SD_CL_ERROR_NO_SAVED_DIRECTORY=11
+_SD_CL_ERROR_NOT_STORED=12
+_SD_CL_ERROR_INVALID_N=13
+_SD_CL_ERROR_INVALID_INPUT=14
 # }}}
 
 # Parameters {{{
@@ -94,7 +95,7 @@ sd () {
       "-w" ) file=${SD_CL_WINDOW_FILE};mode="window";;
       "-r" ) file=${SD_CL_RANKING_FILE};mode="ranking";;
       "-C" ) cleardir=1;;
-      "-L" ) echo "$SD_CL_LICENSE"; return;;
+      "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
         echo "$help"|${PAGER:-less} >/dev/tty
         return
@@ -126,7 +127,7 @@ sd () {
 
   if [ ! -d "${curdir/\~/$HOME}" ];then
     echo "$curdir: No such a directory"
-    return $SD_CL_ERROR_NO_SUCH_DIRECTORY
+    return $_SD_CL_ERROR_NO_SUCH_DIRECTORY
   else
     touch "$file"
     local pre_list="$(grep -v "^${curdir}$" < "$file"|head -n"$((SD_CL_N-1))")"
@@ -145,7 +146,7 @@ cl () {
       return
     else
       echo "There is no saved directory."
-      return $SD_CL_ERROR_NO_SAVED_DIRECTORY
+      return $_SD_CL_ERROR_NO_SAVED_DIRECTORY
     fi
   fi
 
@@ -195,6 +196,7 @@ cl () {
   local cleardir=0
   local n=""
   local dir=""
+  local dirs=()
   local file=${SD_CL_LASTDIR_FILE}
 
   # Get arguments
@@ -271,8 +273,13 @@ cl () {
       IFS=$orig_ifs
     }
   fi
-  local dirs=()
   _cl_get_dirs
+
+  # Check dirs
+  if [ "${dirs[@]}" -eq 0 ];then
+    echo "No directory is stored for $mode"
+    return
+  fi
 
   # List up
   if [ $list -eq 1 ];then
@@ -288,7 +295,7 @@ cl () {
   # Change to given directory
   if [ "$dir" != "" ];then
     local d
-    dirs_tmp=()
+    local dirs_tmp=()
     for d in "${dirs[@]}";do
       if echo "$d" |grep -q "$dir";then
         dirs_tmp=("${dirs_tmp[@]}" "$d")
@@ -300,41 +307,54 @@ cl () {
     done
     if [ "${#dirs[@]}" -eq 0 ];then
       echo "No such a directory is stored for $mode: ${dir}"
-      return $SD_CL_ERROR_NOT_STORED
+      return $_SD_CL_ERROR_NOT_STORED
     fi
   fi
 
-  while :;do
-    if [ -n "$selection" ];then
-      dir=$(for d in "${dirs[@]}";do echo "$d";done|$selection)
-    else
-      local d
-      local i=$((${#dirs[@]}-1))
-      while [ $i -ge 0 ];do
-        printf "%3d: %s\\n" $i "${dirs[$i]}"
-        ((i--))
-      done
-      printf "\\nChoose directory number: "
-      read -r i
-      if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
-        echo "$i is not valid."
-        echo "Enter [0-$((${#dirs[@]}-1))]"
-        return $SD_CL_ERROR_INVALID_INPUT
-      fi
-      dir=${dirs[$i]}
+  if [ "$n" != "" ];then
+    if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "${#dirs[@]}" ];then
+      echo "$n is not valid."
+      echo "Enter [0-$((${#dirs[@]}-1))]"
+      return $_SD_CL_ERROR_INVALID_N
     fi
-    if [ -z "$dir" ];then
-      return
-    fi
+    dirs=("${dirs[$n]}")
+  fi
 
-    if [ $mode = vim ];then
-      eval command cd "${dir}"
-      dirs=()
-      _cl_get_dirs
-    else
-      break
-    fi
-  done
+  if [ "${#dirs[@]}" -eq 1 ];then
+    dir="${dirs[0]}"
+  else
+     while :;do
+       if [ -n "$selection" ];then
+         dir=$(for d in "${dirs[@]}";do echo "$d";done|$selection)
+       else
+         local d
+         local i=$((${#dirs[@]}-1))
+         while [ $i -ge 0 ];do
+           printf "%3d: %s\\n" $i "${dirs[$i]}"
+           ((i--))
+         done
+         printf "\\nChoose directory number: "
+         read -r i
+         if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
+           echo "$i is not valid."
+           echo "Enter [0-$((${#dirs[@]}-1))]"
+           return $_SD_CL_ERROR_INVALID_INPUT
+         fi
+         dir=${dirs[$i]}
+       fi
+       if [ -z "$dir" ];then
+         return
+       fi
+
+       if [ $mode = vim ];then
+         eval command cd "${dir}"
+         dirs=()
+         _cl_get_dirs
+       else
+         break
+       fi
+     done
+  fi
 
   if [ $mode = back ];then
     local i

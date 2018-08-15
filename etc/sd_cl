@@ -86,7 +86,6 @@ sd () {
   local file=${SD_CL_LASTDIR_FILE}
   local dir=""
 
-echo hoge0
   # Get arguments
   while [ $# -gt 0 ];do
     case $1 in
@@ -106,7 +105,6 @@ echo hoge0
     esac
     shift
   done
-echo hoge1
 
   # Edit predefined dir
   if [ $edit -eq 1 ];then
@@ -114,14 +112,12 @@ echo hoge1
     return
   fi
 
-echo hoge2
   # Clear
   if [ $cleardir -eq 1 ];then
     : > "$file"
     return
   fi
 
-echo hoge3
   # Set Save Dir
   if [ "$dir" = "" ];then
     # Current directory

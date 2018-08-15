@@ -64,7 +64,7 @@ sd () {
   Arguments:
      -e          Edit directory list file
      -C          Clear directories
-     -c          Use the last directory file ($SD_CL_LASTDIR_FILE)
+     -c          Use the last directory file ($SD_CL_LASTDIR_FILE, default)
      -p          Use the pre-defiend dirctory file ($SD_CL_PREDEF_FILE)
      -w          Use the window dirctory file ($SD_CL_WINDOW_FILE)
      -r          Use the ranking directory file ($SD_CL_RANKING_FILE)
@@ -171,6 +171,7 @@ cl () {
      -l          Show saved directories
      -c          Show saved directories and choose a directory
      -C          Clear directories
+     <number>    Move to <number>-th last directory
      -n <number> Move to <number>-th last directory
      -p          Move to pre-defiend dirctory in $SD_CL_PREDEF_FILE
      -w          Move to other window's (screen/tmux) dirctory in $SD_CL_WINDOW_FILE
@@ -207,7 +208,14 @@ cl () {
         return
         ;;
       "--" ) shift; dir="$*"; break;;
-      * ) dir="$*" ;;
+      * )
+        if [ "$1" != "/" ] && expr "$1" : "[0-9]*" >/dev/null;then
+          n=$1
+        else
+          dir="$*"
+          break
+        fi
+        ;;
     esac
     shift
   done
@@ -225,7 +233,7 @@ cl () {
   # Set dirs
   # Functions for vim mode
   if [ -n "$file" ];then
-    _get_dirs () {
+    _cl_get_dirs () {
       local i=0
       local d
       while read -r d;do
@@ -233,7 +241,7 @@ cl () {
       done < $file
     }
   elif [ $mode = vim ];then
-    _get_dirs () {
+    _cl_get_dirs () {
       # Get variables
       local orig_ifs=$IFS
       IFS=$'\n'
@@ -248,7 +256,7 @@ cl () {
       IFS=$orig_ifs
     }
   elif [ $mode = back ];then
-    _get_dirs () {
+    _cl_get_dirs () {
       # Get variables
       local orig_ifs=$IFS
       IFS=$'\n'
@@ -257,7 +265,7 @@ cl () {
     }
   fi
   local dirs=()
-  _get_dirs
+  _cl_get_dirs
 
   # List up
   if [ $list -eq 1 ];then
@@ -300,7 +308,6 @@ cl () {
         ((i--))
       done
       printf "\\nChoose directory number: "
-      local i
       read -r i
       if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
         echo "$i is not valid."
@@ -316,16 +323,16 @@ cl () {
     if [ $mode = vim ];then
       eval command cd "${dir}"
       dirs=()
-      _get_dirs
+      _cl_get_dirs
     else
       break
     fi
   done
 
   if [ $mode = back ];then
-    local n
-    n=$(dirs -p -v|grep " $dir$"|head -n1|awk '{print $1}')
-    command pushd +"${n}" >/dev/null
+    local i
+    i=$(dirs -p -v|grep " $dir$"|head -n1|awk '{print $1}')
+    command pushd +"${i}" >/dev/null
     return
   fi
 
@@ -490,8 +497,8 @@ _cd_ranking () {
   curdir=${curdir/^$HOME/\~}
   local rdf=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
   touch "$rdf"
-  local n=$(grep " ${curdir}$" "$rdf"|cut -d" " -f1)
-  if [ -z "$n" ];then
+  local i=$(grep " ${curdir}$" "$rdf"|cut -d" " -f1)
+  if [ -z "$i" ];then
     echo "1 $curdir" >> "$rdf"
   else
     local rd=$(sed "s|${n} ${curdir}$|$((n+1)) ${curdir}|" "${rdf}"|sort -rn)

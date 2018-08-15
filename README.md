@@ -97,7 +97,7 @@ Options for `sd` are:
 
 Options for `cl` are:
 
-    Usage: cl [-lcCpwrbvLh] [-n <number> ] [<directory>]
+    Usage: cl [-lcCpwrbvLh] [-n <number> ] [<number>] [<directory>]
     If there are no arguments, you will move to the last saved directory by sd command.
     If you give any directory name, it searches for it in saved directories
     and cd to there if only one is found.
@@ -107,6 +107,7 @@ Options for `cl` are:
        -l          Show saved directories
        -c          Show saved directories and choose a directory
        -C          Clear directories
+       <number>    Move to <number>-th last directory
        -n <number> Move to <number>-th last directory
        -p          Move to pre-defiend dirctory in ~/.predefDir
        -w          Move to other window's (screen/tmux) dirctory in ~/.windowDir
@@ -122,7 +123,7 @@ Options for `cl` are:
 `-r` (ranking directory), or `-b` (moving history)
 change the list file and can be used with other options.
 
-e.x.) `cl -p -n 3` moves to the 3rd directory stored in pre-defined directory list.
+e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
 
 ### Saved directory list and cl selection mode example
 

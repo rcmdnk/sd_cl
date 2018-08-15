@@ -39,10 +39,10 @@ export SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
 export SD_CL_N=${SD_CL_N:-20}
 
 # Directory store file
-export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-$HOME/.lastDir}
-export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-$HOME/.predefDir}
-export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-$HOME/.windowDir}
-export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
+export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-$HOME/.config/sd_cl/lastdir}
+export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-$HOME/.config/sd_cl/predef}
+export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-$HOME/.config/sd_cl/window}
+export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-$HOME/.config/sd_cl/ranking}
 
 # post cd (overwrite cd (Bash) or chpwd (Zsh))
 export SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
@@ -60,6 +60,16 @@ export SD_CL_RANKING=${SD_CL_RANKING:-1}
 # }}}
 
 # main functions {{{
+
+_sd_cl_check_file () {
+  mkdir -p "$(dirname "${1}")"
+  touch "$1"
+}
+
+_sd_cl_reset_file () {
+  mkdir -p "$(dirname "${1}")"
+  : > "$file"
+}
 
 sd () {
   # Help
@@ -108,13 +118,14 @@ sd () {
 
   # Edit predefined dir
   if [ $edit -eq 1 ];then
+    _sd_cl_check_file "$file"
     ${EDITOR:-"vi"} "$file"
     return
   fi
 
   # Clear
   if [ $cleardir -eq 1 ];then
-    : > "$file"
+    _sd_cl_reset_file "$file"
     return
   fi
 
@@ -129,7 +140,7 @@ sd () {
     echo "$dir: No such a directory"
     return $_SD_CL_ERROR_NO_SUCH_DIRECTORY
   else
-    touch "$file"
+    _sd_cl_check_file "$file"
     local pre_list="$(grep -v "^${dir}$" < "$file"|head -n"$((SD_CL_N-1))")"
     echo "$dir" > "$file"
     echo "$pre_list" >> "$file"
@@ -137,9 +148,12 @@ sd () {
 }
 
 cl () {
+  # Set default file
+  local file="${SD_CL_LASTDIR_FILE}"
+
   # Change to the last dir
   if [ $# -eq 0 ];then
-    touch "${SD_CL_LASTDIR_FILE}"
+    _sd_cl_check_file "$file"
     local ld="$(head -n1 "${SD_CL_LASTDIR_FILE}")"
     if [ "$ld" != "" ];then
       eval command cd "$ld" # eval to expand ~
@@ -197,7 +211,6 @@ cl () {
   local n=""
   local dir=""
   local dirs=()
-  local file=${SD_CL_LASTDIR_FILE}
 
   # Get arguments
   while [ $# -gt 0 ];do
@@ -415,8 +428,8 @@ if [ $SD_CL_NOCOMPLETION -eq 0 ];then
       if [ "$ldf" = "all" ];then
         ldf=${SD_CL_LASTDIR_FILE}
         local pdf=${SD_CL_PREDEF_FILE}
-        touch "$ldf"
-        touch "$pdf"
+        _sd_cl_check_file "$ldf"
+        _sd_cl_check_file "$pdf"
         compadd $(cat "$ldf"|sed "s|~|$HOME|")
         compadd $(cat "$pdf"|sed "s|~|$HOME|")
         compadd $(dirs -p|sed "s|~|$HOME|")
@@ -488,13 +501,13 @@ if [ $SD_CL_NOCOMPLETION -eq 0 ];then
       local orig_ifs=$IFS
       IFS=$'\n'
       case $prev in
-        -c)touch "$ldf" && d=$(cat "$ldf"|sed "s|~|$HOME|");;
-        -p)touch "$pdf" && d=$(cat "$pdf"|sed "s|~|$HOME|");;
-        -w)touch "$ldf" && d=$(cat "$wdf"|cut -d' ' -f3-|sed "s|~|$HOME|");;
-        -r)touch "$rdf" && d=$(cat "$rdf"|cut -d' ' -f2-|sed "s|~|$HOME|");;
+        -c)_sd_cl_check_file "$ldf" && d=$(cat "$ldf"|sed "s|~|$HOME|");;
+        -p)_sd_cl_check_file "$pdf" && d=$(cat "$pdf"|sed "s|~|$HOME|");;
+        -w)_sd_cl_check_file "$ldf" && d=$(cat "$wdf"|cut -d' ' -f3-|sed "s|~|$HOME|");;
+        -r)_sd_cl_check_file "$rdf" && d=$(cat "$rdf"|cut -d' ' -f2-|sed "s|~|$HOME|");;
         -b)d=$(dirs -p|sed "s|~|$HOME|");;
         *)
-          touch "$ldf" && touch "$pdf" && d=$(cat "$ldf"|sed "s|~|$HOME|")$'\n'$(cat "$pdf"|sed "s|~|$HOME|")$'\n'$(dirs -p|sed "s|~|$HOME|")
+          _sd_cl_check_file "$ldf" && _sd_cl_check_file "$pdf" && d=$(cat "$ldf"|sed "s|~|$HOME|")$'\n'$(cat "$pdf"|sed "s|~|$HOME|")$'\n'$(dirs -p|sed "s|~|$HOME|")
           ;;
       esac
       COMPREPLY=($(echo "$d"|grep "$cur"))
@@ -523,7 +536,7 @@ _cd_ranking () {
   fi
   curdir=${curdir/^$HOME/\~}
   local rdf=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
-  touch "$rdf"
+  _sd_cl_check_file "$rdf"
   local i=$(grep " ${curdir}$" "$rdf"|cut -d" " -f1)
   if [ -z "$i" ];then
     echo "1 $curdir" >> "$rdf"
@@ -554,7 +567,7 @@ _post_cd () {
     local pane="$(tmux display -p '#P')"
   fi
   local wdf=${SD_CL_WINDOW_FILE}
-  touch "$wdf"
+  _sd_cl_check_file "$wdf"
   local d="$(pwd)"
   d="${d/^$HOME\~}"
   if grep -q "^$window $pane " "$wdf";then

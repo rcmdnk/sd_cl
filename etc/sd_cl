@@ -276,7 +276,7 @@ cl () {
   _cl_get_dirs
 
   # Check dirs
-  if [ "${dirs[@]}" -eq 0 ];then
+  if [ "${#dirs[@]}" -eq 0 ];then
     echo "No directory is stored for $mode"
     return
   fi

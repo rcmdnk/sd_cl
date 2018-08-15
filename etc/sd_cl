@@ -23,6 +23,13 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
 # }}}
 
+# Fixed Parameters {{{
+readonly SD_CL_RETURN_NO_SUCH_DIRECTORY=10
+readonly SD_CL_RETURN_NO_SAVED_DIRECTORY=11
+readonly SD_CL_RETURN_NO_SUCH_DIRECTORY=12
+readonly SD_CL_RETURN_INVALID_INPUT=13
+# }}}
+
 # Parameters {{{
 # Selection tool
 export SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
@@ -119,7 +126,7 @@ sd () {
 
   if [ ! -d "${curdir/\~/$HOME}" ];then
     echo "$curdir: No such directory"
-    return 1
+    return $SD_CL_RETURN_NO_SUCH_DIRECTORY
   else
     touch "$file"
     local pre_list="$(grep -v "^${curdir}$" < "$file"|head -n"$((SD_CL_N-1))")"
@@ -138,7 +145,7 @@ cl () {
       return
     else
       echo "There is no saved directory."
-      return 1
+      return $SD_CL_RETURN_NO_SAVED_DIRECTORY
     fi
   fi
 
@@ -293,7 +300,7 @@ cl () {
     done
     if [ "${#dirs[@]}" -eq 0 ];then
       echo "No such a directory is stored for $mode: ${dir}"
-      return 2
+      return $SD_CL_RETURN_NO_SUCH_DIRECTORY
     fi
   fi
 
@@ -312,7 +319,7 @@ cl () {
       if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
         echo "$i is not valid."
         echo "Enter [0-$((${#dirs[@]}-1))]"
-        return 3
+        return $SD_CL_RETURN_INVALID_INPUT
       fi
       dir=${dirs[$i]}
     fi

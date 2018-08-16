@@ -243,7 +243,7 @@ cl () {
       "-v" ) file="";mode="vim";;
       "-b" ) file="";mode="back";;
       "-C" ) cleardir=1;;
-      "-L" ) echo "$SD_CL_LICENSE"; return 0;;
+      "-L" ) echo "$_SD_CL_LICENSE"; return 0;;
       "-h" )
         echo "$help"|${PAGER:-less} >/dev/tty
         return 0
@@ -288,17 +288,13 @@ cl () {
   elif [ $mode = vim ];then
     _cl_get_dirs () {
       # Get variables
-      local orig_ifs=$IFS
-      IFS=$'\n'
-      for d in $(ls -a);do
-        if [ "$d" = "." ];then
-          continue
-        elif [ ! -d "$d" ];then
+      for d in *;do
+        if [ ! -d "$d" ];then
           continue
         fi
         dirs=("${dirs[@]}" "$d")
       done
-      IFS=$orig_ifs
+      dirs=(".." "${dirs[@]}")
     }
   elif [ $mode = back ];then
     _cl_get_dirs () {
@@ -328,19 +324,28 @@ cl () {
     return 0
   fi
 
-  # Change to given directory
-  if [ "$dir" != "" ];then
-    local d
-    local dirs_tmp=()
-    for d in "${dirs[@]}";do
-      if echo "$d" |grep -q "$dir";then
-        dirs_tmp=("${dirs_tmp[@]}" "$d")
+  # Cleanup list
+  local dirs_tmp=()
+  local d
+  for d in "${dirs[@]}";do
+    if [ $mode = window ];then
+      d=$(echo "$d"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
+    elif [ $mode = ranking ];then
+      d=$(echo "$d"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
+    fi
+    if [ "$dir" != "" ];then
+      if ! eval echo "$d" |eval grep -q "$dir";then
+        continue
       fi
-    done
-    dirs=()
-    for d in "${dirs_tmp[@]}";do
-      dirs=("${dirs[@]}" "$d")
-    done
+    fi
+    dirs_tmp=("${dirs_tmp[@]}" "$d")
+  done
+  dirs=()
+  for d in "${dirs_tmp[@]}";do
+    dirs=("${dirs[@]}" "$d")
+  done
+
+  if [ "$dir" != "" ];then
     if [ "${#dirs[@]}" -eq 0 ];then
       echo "No such a directory is stored for $mode: ${dir}"
       return $_SD_CL_ERROR_NOT_STORED
@@ -399,25 +404,20 @@ cl () {
     return 0
   fi
 
-  if [ $mode = window ];then
-    dir=$(echo $dir|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
-  elif [ $mode = ranking ];then
-    dir=$(echo $dir|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
-  fi
   eval command cd "${dir}"
 } # }}}
 
 # Completion {{{
-if [ $SD_CL_NOCOMPLETION -eq 0 ];then
+if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
   if [ "$ZSH_VERSION" != "" ];then
-    if [ $SD_CL_NOCOMPINIT -eq 0 ];then
+    if [ "$SD_CL_NOCOMPINIT" -eq 0 ];then
       autoload -Uz compinit
       compinit
     fi
 
     _cl () { # {{{
       typeset -A opt_args
-      local context state line
+      local state line
       _arguments \
         '-l:: :->non'\
         '-c:: :->lastdir'\

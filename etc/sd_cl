@@ -39,10 +39,11 @@ export SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
 export SD_CL_N=${SD_CL_N:-20}
 
 # Directory store file
-export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-$HOME/.config/sd_cl/lastdir}
-export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-$HOME/.config/sd_cl/predef}
-export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-$HOME/.config/sd_cl/window}
-export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-$HOME/.config/sd_cl/ranking}
+export SD_CL_CONFIG_DIR=${SD_CL_CONFIG_DIR:-$HOME/.config/sd_cl}
+export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-${SD_CL_CONFIG_DIR}/lastdir}
+export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-${SD_CL_CONFIG_DIR}/predef}
+export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-${SD_CL_CONFIG_DIR}/window}
+export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
 
 # post cd (overwrite cd (Bash) or chpwd (Zsh))
 export SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
@@ -56,6 +57,7 @@ export SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 
 # Ranking method
 export SD_CL_RANKING=${SD_CL_RANKING:-2}
+export SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
 export SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
 export SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
 export SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
@@ -123,10 +125,10 @@ sd () {
       "-w" ) file=${SD_CL_WINDOW_FILE};mode="window";;
       "-r" ) file=${SD_CL_RANKING_FILE};mode="ranking";;
       "-C" ) cleardir=1;;
-      "-L" ) echo "$_SD_CL_LICENSE"; return;;
+      "-L" ) echo "$_SD_CL_LICENSE"; return 0;;
       "-h" )
         echo "$help"|${PAGER:-less} >/dev/tty
-        return
+        return 0
         ;;
       "--" ) shift; dir="$*"; break;;
       * ) dir="$*" ;;
@@ -138,13 +140,13 @@ sd () {
   if [ $edit -eq 1 ];then
     _sd_cl_check_file "$file"
     ${EDITOR:-"vi"} "$file"
-    return
+    return 0
   fi
 
   # Clear
   if [ $cleardir -eq 1 ];then
     _sd_cl_reset_file "$file"
-    return
+    return 0
   fi
 
   # Set Save Dir
@@ -174,7 +176,7 @@ cl () {
     local ld="$(head -n1 "${SD_CL_LASTDIR_FILE}")"
     if [ "$ld" != "" ];then
       eval command cd "$ld" # eval to expand ~
-      return
+      return 0
     else
       echo "There is no saved directory."
       return $_SD_CL_ERROR_NO_SAVED_DIRECTORY
@@ -241,10 +243,10 @@ cl () {
       "-v" ) file="";mode="vim";;
       "-b" ) file="";mode="back";;
       "-C" ) cleardir=1;;
-      "-L" ) echo "$SD_CL_LICENSE"; return;;
+      "-L" ) echo "$SD_CL_LICENSE"; return 0;;
       "-h" )
         echo "$help"|${PAGER:-less} >/dev/tty
-        return
+        return 0
         ;;
       "--" ) shift; dir="$*"; break;;
       * )
@@ -266,12 +268,15 @@ cl () {
     elif [ $mode = "back" ];then
       dirs -c
     fi
-    return
+    return 0
   fi
 
   # Set dirs
   # Functions for vim mode
   if [ -n "$file" ];then
+    if [ "$mode" = ranking ];then
+      _sd_cl_ranking_update
+    fi
     _cl_get_dirs () {
       local i=0
       local d
@@ -309,7 +314,7 @@ cl () {
   # Check dirs
   if [ "${#dirs[@]}" -eq 0 ];then
     echo "No directory is stored for $mode"
-    return
+    return 0
   fi
 
   # List up
@@ -320,7 +325,7 @@ cl () {
       printf "%3d %s\\n" $i "$(_sd_cl_get_dir "${d}")"
       ((i++))
     done
-    return
+    return 0
   fi
 
   # Change to given directory
@@ -374,7 +379,7 @@ cl () {
          dir=${dirs[$i]}
        fi
        if [ -z "$dir" ];then
-         return
+         return 0
        fi
 
        if [ $mode = vim ];then
@@ -391,7 +396,7 @@ cl () {
     local i
     i=$(dirs -p -v|grep " $dir$"|head -n1|awk '{print $1}')
     command pushd +"${i}" >/dev/null
-    return
+    return 0
   fi
 
   if [ $mode = window ];then
@@ -427,7 +432,7 @@ if [ $SD_CL_NOCOMPLETION -eq 0 ];then
         '-h:: :->non'
       local ldf=""
       if echo "$state"|grep -q non;then
-        return
+        return 0
       elif echo "$state"|grep -q predef;then
         ldf=${SD_CL_PREDEF_FILE}
       elif echo "$state"|grep -q window;then
@@ -500,14 +505,14 @@ if [ $SD_CL_NOCOMPLETION -eq 0 ];then
 
       if [[ "$cur" == -* ]];then
         COMPREPLY=($( compgen -W "${opts[*]}" -- "$cur"))
-        return
+        return 0
       elif [ "${COMP_WORDS[$i]}" != "" ] && echo "${opts[@]}"|grep -q "$cur";then
         COMPREPLY=("$cur")
-        return
+        return 0
       elif [ $nocomp -eq 1 ];then
-        return
+        return 0
       elif [[ "$prev" != -* && $COMP_CWORD -ne 1 ]];then
-        return
+        return 0
       fi
 
       local ldf=${SD_CL_LASTDIR_FILE}
@@ -547,57 +552,77 @@ fi
 # }}}
 
 # ranking {{{
-_cd_ranking () {
-  local curdir=$(pwd)
-  if [ "$SD_CL_RANKING_WO_HOME" -eq 1 ] && [ "$curdir" = "$HOME" ];then
-    return
+_sd_cl_ranking_update () {
+  _sd_cl_check_file "${SD_CL_RANKING_FILE}"
+  _sd_cl_check_file "${SD_CL_RANKING_TRIAL_FILE}"
+  local trial="$(cat "${SD_CL_RANKING_TRIAL_FILE}")"
+  if ! expr "$trial" : "[0-9]*" >/dev/null;then
+    trial=0
   fi
-  curdir=$(_sd_cl_get_dir)
-  local rdf=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
-  _sd_cl_check_file "$rdf"
   local dirs=()
   local line
-  local exist=0
+  while read -r line;do
+    local rank="$(echo "$line"|cut -d' ' -f1)"
+    local dir="$(echo "$line"|cut -d' ' -f2-)"
+    if ! expr "$rank" : "[0-9]*" >/dev/null;then
+      continue
+    fi
+    rank=$((rank-trial))
+    if [ "$rank" -le 0 ];then
+      continue
+    fi
+    dirs=("${dirs[@]}" "$rank $dir")
+  done < "${SD_CL_RANKING_FILE}"
+  for line in "${dirs[@]}";do
+    echo "$line"
+  done |sort -rn > "${SD_CL_RANKING_FILE}"
+
+  echo 0 > "${SD_CL_RANKING_TRIAL_FILE}"
+}
+
+_sd_cl_ranking () {
+  if [ "$SD_CL_RANKING_WO_HOME" -eq 1 ] && [ "$(pwd)" = "$HOME" ];then
+    return 0
+  fi
+  curdir=$(_sd_cl_get_dir)
   if [ "$SD_CL_RANKING" -eq 2 ];then
     local n=${SD_CL_RANKING_N_CMD}
   else
     local n=${SD_CL_RANKING_N_CD}
   fi
-  while read -r line;do
-    local rank="$(echo "$line"|cut -d' ' -f1)"
-    local dir="$(echo "$line"|cut -d' ' -f2-)"
-    if [ "${dir}" = "${curdir}" ];then
-      rank=$((rank+n))
-      exist=1
-    else
-      ((rank--))
-      if [ "$rank" -le 0 ];then
-        continue
-      fi
-    fi
-    dirs=("${dirs[@]}" "$rank $dir")
-  done < "$rdf"
-  if [ $exist -eq 0 ];then
-    dirs=("${dirs[@]}" "$n $curdir")
+  _sd_cl_check_file "${SD_CL_RANKING_FILE}"
+  local rank=$(grep " ${curdir}$" "${SD_CL_RANKING_FILE}"|cut -d" " -f1)
+  if [ -z "$rank" ];then
+    echo "$n $curdir" >> "${SD_CL_RANKING_FILE}"
+  else
+    local rd=$(sed "s|${rank} ${curdir}$|$((rank+n)) ${curdir}|" "${SD_CL_RANKING_FILE}"|sort -rn)
+    echo "$rd" > "${SD_CL_RANKING_FILE}"
   fi
-  _sd_cl_check_file "$rdf"
-  for line in "${dirs[@]}";do
-    echo "$line"
-  done |sort -rn > "${rdf}"
+
+  _sd_cl_check_file "${SD_CL_RANKING_TRIAL_FILE}"
+  local trial="$(cat "${SD_CL_RANKING_TRIAL_FILE}")"
+  if ! expr "$trial" : "[0-9]*" >/dev/null;then
+    trial=1
+  else
+    ((trial++))
+  fi
+  echo $trial > "${SD_CL_RANKING_TRIAL_FILE}"
 }
 
 if [ "$SD_CL_RANKING" -eq 2 ];then
-  PROMPT_COMMAND="${PROMPT_COMMAND:+${PROMPT_COMMAND};}_cd_ranking"
+  if ! echo "$PROMPT_COMMAND"|grep -q _sd_cl_ranking;then
+    PROMPT_COMMAND="${PROMPT_COMMAND:+${PROMPT_COMMAND};}_sd_cl_ranking"
+  fi
 fi
 # }}}
 
 # function for post cd {{{
 _post_cd () {
   if [ "$SD_CL_RANKING" -eq 1 ];then
-    _cd_ranking
+    _sd_cl_ranking
   fi
   if [ -z "$STY" ] && [ -z "$TMUX" ];then
-    return
+    return 0
   fi
   if [ -n "$STY" ];then
     local window="$WINDOW"
@@ -623,13 +648,13 @@ _wrap_cd () {
   local dir="$*"
   if [ "$*" = "" ];then
     if [ "$(pwd)" = "$HOME" ];then
-      return
+      return 0
     else
       dir="$HOME"
     fi
   elif [ "$*" = "-" ];then
     pushd >/dev/null
-    return
+    return 0
   else
     if [ -f "$*" ];then
       dir=$(dirname "$*")

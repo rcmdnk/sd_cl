@@ -24,6 +24,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
 # }}}
 
 # Fixed Parameters {{{
+_SD_CL_ERROR_INVALID_ARGUMENT=100
 _SD_CL_ERROR_NO_SUCH_DIRECTORY=10
 _SD_CL_ERROR_NO_SAVED_DIRECTORY=11
 _SD_CL_ERROR_NOT_STORED=12
@@ -33,35 +34,37 @@ _SD_CL_ERROR_INVALID_INPUT=14
 
 # Parameters {{{
 # Selection tool
-export SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
+SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
 
-# Number of kept last directories
-export SD_CL_N=${SD_CL_N:-20}
+# Number of kept last directories (for SD_CL_LASTDIR_FILE)
+SD_CL_N=${SD_CL_N:-20}
+
+# Show window/pane or ranking information at selection
+SD_CL_SHOW_MORE_INFO=${SD_CL_SHOW_MORE_INFO:-0}
 
 # Directory store file
-export SD_CL_CONFIG_DIR=${SD_CL_CONFIG_DIR:-$HOME/.config/sd_cl}
-export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-${SD_CL_CONFIG_DIR}/lastdir}
-export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-${SD_CL_CONFIG_DIR}/predef}
-export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-${SD_CL_CONFIG_DIR}/window}
-export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
-
-# post cd (overwrite cd (Bash) or chpwd (Zsh))
-export SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
-
-# COMPLETION
-export SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
-export SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
-
-# cd wrap to pushd/popd
-export SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
+SD_CL_CONFIG_DIR=${SD_CL_CONFIG_DIR:-$HOME/.config/sd_cl}
+SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-${SD_CL_CONFIG_DIR}/lastdir}
+SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-${SD_CL_CONFIG_DIR}/predef}
+SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-${SD_CL_CONFIG_DIR}/window}
+SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
 
 # Ranking method
-export SD_CL_RANKING=${SD_CL_RANKING:-2}
-export SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
-export SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
-export SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
-export SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
+SD_CL_RANKING_METHOD=${SD_CL_RANKING_METHOD:-2}
+SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
+SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
+SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
+SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
 
+# post cd (overwrite cd (Bash) or chpwd (Zsh))
+SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
+
+# COMPLETION
+SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
+SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
+
+# cd wrap to pushd/popd
+SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 # }}}
 
 
@@ -131,6 +134,10 @@ sd () {
         return 0
         ;;
       "--" ) shift; dir="$*"; break;;
+      -* )
+        echo "Invalid argument: $1"
+        return $_SD_CL_ERROR_INVALID_ARGUMENT
+        ;;
       * ) dir="$*" ;;
     esac
     shift
@@ -245,10 +252,14 @@ cl () {
       "-C" ) cleardir=1;;
       "-L" ) echo "$_SD_CL_LICENSE"; return 0;;
       "-h" )
-        echo "$help"|${PAGER:-less} >/dev/tty
+        echo "$help"|${PAGER:-less}
         return 0
         ;;
       "--" ) shift; dir="$*"; break;;
+      -* )
+        echo "Invalid argument: $1"
+        return $_SD_CL_ERROR_INVALID_ARGUMENT
+        ;;
       * )
         if expr "$1" : "[0-9]*" >/dev/null;then
           n=$1
@@ -328,40 +339,40 @@ cl () {
   local dirs_tmp=()
   local d
   for d in "${dirs[@]}";do
-    if [ $mode = window ];then
-      d=$(echo "$d"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
-    elif [ $mode = ranking ];then
-      d=$(echo "$d"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
+    if [ "$SD_CL_SHOW_MORE_INFO" -eq 0 ];then
+      if [ $mode = window ];then
+        d=$(echo "$d"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
+      elif [ $mode = ranking ];then
+        d=$(echo "$d"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
+      fi
     fi
     if [ "$dir" != "" ];then
-      if ! eval echo "$d" |eval grep -q "$dir";then
+      if ! eval echo "$d" |eval grep -q -- "$dir";then
         continue
       fi
     fi
     dirs_tmp=("${dirs_tmp[@]}" "$d")
   done
+  if [ "${#dirs_tmp[@]}" -eq 0 ];then
+    echo "No such a directory is stored for $mode: ${dir}"
+    return $_SD_CL_ERROR_NOT_STORED
+  fi
+
   dirs=()
   for d in "${dirs_tmp[@]}";do
     dirs=("${dirs[@]}" "$d")
   done
 
-  if [ "$dir" != "" ];then
-    if [ "${#dirs[@]}" -eq 0 ];then
-      echo "No such a directory is stored for $mode: ${dir}"
-      return $_SD_CL_ERROR_NOT_STORED
-    fi
-  fi
-
   if [ "$n" != "" ];then
     if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "${#dirs[@]}" ];then
-      echo "$n is not valid."
+      echo "$n is not valid number."
       echo "Enter [0-$((${#dirs[@]}-1))]"
       return $_SD_CL_ERROR_INVALID_N
     fi
     dirs=("${dirs[$n]}")
   fi
 
-  if [ "${#dirs[@]}" -eq 1 ];then
+  if [ "${#dirs[@]}" -eq 1 ] &&  [ "$mode" != vim ];then
     dir="${dirs[0]}"
   else
      while :;do
@@ -399,9 +410,17 @@ cl () {
 
   if [ $mode = back ];then
     local i
-    i=$(dirs -p -v|grep " $dir$"|head -n1|awk '{print $1}')
+    i=$(dirs -p -v|grep -- " $dir$"|head -n1|awk '{print $1}')
     command pushd +"${i}" >/dev/null
     return 0
+  fi
+
+  if [ "$SD_CL_SHOW_MORE_INFO" -ne 0 ];then
+    if [ $mode = window ];then
+      dir=$(echo "$dir"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
+    elif [ $mode = ranking ];then
+      dir=$(echo "$dir"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
+    fi
   fi
 
   eval command cd "${dir}"
@@ -506,7 +525,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       if [[ "$cur" == -* ]];then
         COMPREPLY=($( compgen -W "${opts[*]}" -- "$cur"))
         return 0
-      elif [ "${COMP_WORDS[$i]}" != "" ] && echo "${opts[@]}"|grep -q "$cur";then
+      elif [ "${COMP_WORDS[$i]}" != "" ] && echo "${opts[@]}"|grep -q -- "$cur";then
         COMPREPLY=("$cur")
         return 0
       elif [ $nocomp -eq 1 ];then
@@ -533,7 +552,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
           _sd_cl_check_file "$ldf" && _sd_cl_check_file "$pdf" && d=$(cat "$ldf")$'\n'$(cat "$pdf")$'\n'$(dirs -p)
           ;;
       esac
-      COMPREPLY=($(echo "$d"|grep "$cur"))
+      COMPREPLY=($(echo "$d"|grep -- "$cur"))
       IFS=$orig_ifs
     }
     complete -F _cl cl
@@ -591,7 +610,7 @@ _sd_cl_ranking () {
     local n=${SD_CL_RANKING_N_CD}
   fi
   _sd_cl_check_file "${SD_CL_RANKING_FILE}"
-  local rank=$(grep " ${curdir}$" "${SD_CL_RANKING_FILE}"|cut -d" " -f1)
+  local rank=$(grep -- " ${curdir}$" "${SD_CL_RANKING_FILE}"|cut -d" " -f1)
   if [ -z "$rank" ];then
     echo "$n $curdir" >> "${SD_CL_RANKING_FILE}"
   else
@@ -609,7 +628,7 @@ _sd_cl_ranking () {
   echo $trial > "${SD_CL_RANKING_TRIAL_FILE}"
 }
 
-if [ "$SD_CL_RANKING" -eq 2 ];then
+if [ "$SD_CL_RANKING_METHOD" -eq 2 ];then
   if ! echo "$PROMPT_COMMAND"|grep -q _sd_cl_ranking;then
     PROMPT_COMMAND="${PROMPT_COMMAND:+${PROMPT_COMMAND};}_sd_cl_ranking"
   fi
@@ -618,7 +637,7 @@ fi
 
 # function for post cd {{{
 _post_cd () {
-  if [ "$SD_CL_RANKING" -eq 1 ];then
+  if [ "$SD_CL_RANKING_METHOD" -eq 1 ];then
     _sd_cl_ranking
   fi
   if [ -z "$STY" ] && [ -z "$TMUX" ];then

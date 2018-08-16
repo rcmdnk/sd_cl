@@ -74,6 +74,33 @@ You can easily move to other window's directory.
 * `sd` at Window 1 (e.g. directory: `~/usr/etc`).
 * `cl` at Window 2, then you are in `~/usr/etc` at Window 2, too.
 
+### Use selection mode to select from the history
+
+By the default, 20 directories are kept as a history.
+
+You can choose from the history by using `cl -c` and go there.
+
+This command invokes a selection tool defined by `SD_CL_TOOL`,
+, one of installed selection tools or shell interactive selection.
+(See below for more details.)
+
+### Other lists
+
+The default list is made by `sd` command.
+
+You can make another independent list  (predefined list) by `sd -p`.
+
+You can select from the predefined list by `cl -p`
+
+If you are using GNU screen or tmux,
+`cl -w` gives a list of directories in each window/pane.
+
+`cl -r` gives a list of the directory usage ranking.
+
+If you go back, use `cl -b` which shows a history of your `cd`.
+
+`cl -v` starts interactive moving mode like vim.
+
 ### Options for sd
 
 Options for `sd` are:
@@ -86,10 +113,10 @@ Options for `sd` are:
     Arguments:
        -e          Edit directory list file
        -C          Clear directories
-       -c          Use the last directory file (~/.lastDir)
-       -p          Use the pre-defiend dirctory file (~/.predefDir)
-       -w          Use the window dirctory file (~/.windowDir)
-       -r          Use the ranking directory file (~/.rankingDir)
+       -c          Use the last directory file (~/.config/sd_cl/lastdir)
+       -p          Use the pre-defiend dirctory file (~/.config/sd_cl/predef)
+       -w          Use the window dirctory file (~/.config/sd_cl/window)
+       -r          Use the ranking directory file (~/.config/sd_cl/ranking)
        -L          Print license and quit
        -h          Print this HELP and quit
 
@@ -105,13 +132,13 @@ Options for `cl` are:
 
     Arguments:
        -l          Show saved directories
-       -c          Show saved directories and choose a directory
+       -c          Show saved directories and choose a directory in ~/.config/sd_cl/lastdir
        -C          Clear directories
        <number>    Move to <number>-th last directory
        -n <number> Move to <number>-th last directory
-       -p          Move to pre-defiend dirctory in ~/.predefDir
-       -w          Move to other window's (screen/tmux) dirctory in ~/.windowDir
-       -r          Move to ranking directory in ~/.rankingDir
+       -p          Move to pre-defiend dirctory in ~/.config/sd_cl/predef
+       -w          Move to other window's (screen/tmux) dirctory in ~/.config/sd_cl/window
+       -r          Move to ranking directory in ~/.config/sd_cl/ranking
        -b          Move back to moving histories
        -v          Move from current directory, like Vim
        -L          Print license and quit
@@ -218,34 +245,37 @@ Demonstration with Bash 4.3.42.
 Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
 
     # Selection tool
-    export SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
+    SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
 
     # Number of kept last directories
-    export SD_CL_N=${SD_CL_N:-20}
+    SD_CL_N=${SD_CL_N:-20}
+
+    # Show window/pane or ranking information at selection
+    SD_CL_SHOW_MORE_INFO=${SD_CL_SHOW_MORE_INFO:-0}
 
     # Directory store file
-    export SD_CL_CONFIG_DIR=${SD_CL_CONFIG_DIR:-$HOME/.config/sd_cl}
-    export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-${SD_CL_CONFIG_DIR}/lastdir}
-    export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-${SD_CL_CONFIG_DIR}/predef}
-    export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-${SD_CL_CONFIG_DIR}/window}
-    export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
-
-    # post cd (overwrite cd (Bash) or chpwd (Zsh))
-    export SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
-
-    # COMPLETION
-    export SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
-    export SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
-
-    # cd wrap to pushd/popd
-    export SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
+    SD_CL_CONFIG_DIR=${SD_CL_CONFIG_DIR:-$HOME/.config/sd_cl}
+    SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-${SD_CL_CONFIG_DIR}/lastdir}
+    SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-${SD_CL_CONFIG_DIR}/predef}
+    SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-${SD_CL_CONFIG_DIR}/window}
+    SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
 
     # Ranking method
-    export SD_CL_RANKING=${SD_CL_RANKING:-2}
-    export SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
-    export SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
-    export SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
-    export SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
+    SD_CL_RANKING_METHOD=${SD_CL_RANKING_METHOD:-2}
+    SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
+    SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
+    SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
+    SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
+
+    # post cd (overwrite cd (Bash) or chpwd (Zsh))
+    SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
+
+    # COMPLETION
+    SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
+    SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
+
+    # cd wrap to pushd/popd
+    SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 
 
 First, you can decide selection tool as you like by `SD_CL_TOOL`.
@@ -265,9 +295,27 @@ it invokes shell interactive mode.
 
 `SD_CL_N` defines how many directories are kept in the last directory file.
 
+At selection mode, only directory names are shown by default.
+If `SD_CL_SHOW_MORE_INFO=1`, additional information of window/pane (for window list)
+or ranking information are shown.
+Such information are always shown in the list command (`-l`).
+
 `SD_CL_CONFIG_DIR` is the directory for the configuration files.
 Next four file names are file names for the last directories (default),
 predefined directories, window directories, and ranking directories, respectively.
+
+`SD_CL_RANKING_METHOD` sets the method to make a ranking list.
+
+* 0: Do not make a ranking list.
+* 1: Add a directory when cd is executed.
+* 2: Add a directory at any commands.
+
+If you set `SD_CL_RANKING_WO_HOME=0`, then HOME directory is also added in the ranking.
+
+`SD_CL_RANKING_N_CD` and `SD_CL_RANKING_N_CMD` are parameters of the ranking
+for `SD_CL_RANKING_WO_HOME` is 1 and 2 cases, respectively.
+
+If you set the parameter smaller, the ranking becomes more changeable.
 
 If you set `SD_CL_ISPOSTCD` to 0, it doesn't save window's directory
 in GNU screen or tmux.
@@ -312,19 +360,6 @@ replace your `builtin(command) cd` command with
 
 i.e., if you want to enable both in Bash, you should replace above `builtin cd "$@"`
 with `wrap_cd "$@"`.
-
-`SD_CL_RANKING` sets the method to make a ranking list.
-
-* 0: Do not make a ranking list.
-* 1: Add a directory when cd is executed.
-* 2: Add a directory at any commands.
-
-If you set `SD_CL_RANKING_WO_HOME=0`, then HOME directory is also added in the ranking.
-
-`SD_CL_RANKING_N_CD` and `SD_CL_RANKING_N_CMD` are parameters of the ranking
-for `SD_CL_RANKING_WO_HOME` is 1 and 2 cases, respectively.
-
-If you set the parameter smaller, the ranking becomes more changeable.
 
 ## References
 

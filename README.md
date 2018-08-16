@@ -224,10 +224,11 @@ Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
     export SD_CL_N=${SD_CL_N:-20}
 
     # Directory store file
-    export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-$HOME/.lastDir}
-    export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-$HOME/.predefDir}
-    export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-$HOME/.windowDir}
-    export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-$HOME/.rankingDir}
+    export SD_CL_CONFIG_DIR=${SD_CL_CONFIG_DIR:-$HOME/.config/sd_cl}
+    export SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-${SD_CL_CONFIG_DIR}/lastdir}
+    export SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-${SD_CL_CONFIG_DIR}/predef}
+    export SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-${SD_CL_CONFIG_DIR}/window}
+    export SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
 
     # post cd (overwrite cd (Bash) or chpwd (Zsh))
     export SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
@@ -240,7 +241,12 @@ Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
     export SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 
     # Ranking method
-    export SD_CL_RANKING=${SD_CL_RANKING:-1}
+    export SD_CL_RANKING=${SD_CL_RANKING:-2}
+    export SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
+    export SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
+    export SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
+    export SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
+
 
 First, you can decide selection tool as you like by `SD_CL_TOOL`.
 If it is not specified, it will searches followings:
@@ -259,6 +265,7 @@ it invokes shell interactive mode.
 
 `SD_CL_N` defines how many directories are kept in the last directory file.
 
+`SD_CL_CONFIG_DIR` is the directory for the configuration files.
 Next four file names are file names for the last directories (default),
 predefined directories, window directories, and ranking directories, respectively.
 
@@ -311,6 +318,13 @@ with `wrap_cd "$@"`.
 * 0: Do not make a ranking list.
 * 1: Add a directory when cd is executed.
 * 2: Add a directory at any commands.
+
+If you set `SD_CL_RANKING_WO_HOME=0`, then HOME directory is also added in the ranking.
+
+`SD_CL_RANKING_N_CD` and `SD_CL_RANKING_N_CMD` are parameters of the ranking
+for `SD_CL_RANKING_WO_HOME` is 1 and 2 cases, respectively.
+
+If you set the parameter smaller, the ranking becomes more changeable.
 
 ## References
 

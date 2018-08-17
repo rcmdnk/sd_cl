@@ -5,7 +5,7 @@ Make change directory easy and save your time.
 
 <details>
   <summary>
-    **Table of Content**
+    <b>Table of Content</b>
   </summary>
   <div>
 

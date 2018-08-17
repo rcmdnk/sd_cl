@@ -123,10 +123,10 @@ sd () {
   while [ $# -gt 0 ];do
     case $1 in
       "-e" ) edit=1;;
-      "-c" ) file=${SD_CL_LASTDIR_FILE};mode="lastdir";;
-      "-p" ) file=${SD_CL_PREDEF_FILE};mode="predef";;
-      "-w" ) file=${SD_CL_WINDOW_FILE};mode="window";;
-      "-r" ) file=${SD_CL_RANKING_FILE};mode="ranking";;
+      "-c" ) file=${SD_CL_LASTDIR_FILE};;
+      "-p" ) file=${SD_CL_PREDEF_FILE};;
+      "-w" ) file=${SD_CL_WINDOW_FILE};;
+      "-r" ) file=${SD_CL_RANKING_FILE};;
       "-C" ) cleardir=1;;
       "-L" ) echo "$_SD_CL_LICENSE"; return 0;;
       "-h" )
@@ -144,14 +144,14 @@ sd () {
   done
 
   # Edit predefined dir
-  if [ $edit -eq 1 ];then
+  if [ "$edit" -eq 1 ];then
     _sd_cl_check_file "$file"
     ${EDITOR:-"vi"} "$file"
     return 0
   fi
 
   # Clear
-  if [ $cleardir -eq 1 ];then
+  if [ "$cleardir" -eq 1 ];then
     _sd_cl_reset_file "$file"
     return 0
   fi
@@ -190,23 +190,6 @@ cl () {
       echo "There is no saved directory."
       return $_SD_CL_ERROR_NO_SAVED_DIRECTORY
     fi
-  fi
-
-  # Set selection tool
-  local selection=""
-  if type "$SD_CL_TOOL" >& /dev/null ;then
-    selection=$SD_CL_TOOL
-  elif [ "$SD_CL_TOOL" != "NONE" ];then
-    local tool
-    for tool in sentaku peco percol fzf fzy selecta gof pick;do
-      if type $tool >& /dev/null ;then
-        selection=$tool
-        break
-      fi
-    done
-  fi
-  if [ "$selection" = "sentaku" ];then
-    selection="sentaku -s line"
   fi
 
   # Help
@@ -275,10 +258,10 @@ cl () {
   done
 
   # Clear
-  if [ $cleardir -eq 1 ];then
+  if [ "$cleardir" -eq 1 ];then
     if [ "$file" != "" ];then
       : > "$file"
-    elif [ $mode = "back" ];then
+    elif [ "$mode" = "back" ];then
       dirs -c
     fi
     return 0
@@ -297,7 +280,7 @@ cl () {
         dirs=("${dirs[@]}" "$d")
       done < "$file"
     }
-  elif [ $mode = vim ];then
+  elif [ "$mode" = vim ];then
     _cl_get_dirs () {
       # Get variables
       for d in *;do
@@ -308,7 +291,7 @@ cl () {
       done
       dirs=(".." "${dirs[@]}")
     }
-  elif [ $mode = back ];then
+  elif [ "$mode" = back ];then
     _cl_get_dirs () {
       # Get variables
       local orig_ifs=$IFS
@@ -326,7 +309,7 @@ cl () {
   fi
 
   # List up
-  if [ $list -eq 1 ];then
+  if [ "$list" -eq 1 ];then
     local d
     local i=0
     for d in "${dirs[@]}";do
@@ -341,9 +324,9 @@ cl () {
   local d
   for d in "${dirs[@]}";do
     if [ "$SD_CL_SHOW_MORE_INFO" -eq 0 ];then
-      if [ $mode = window ];then
+      if [ "$mode" = window ];then
         d=$(echo "$d"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
-      elif [ $mode = ranking ];then
+      elif [ "$mode" = ranking ];then
         d=$(echo "$d"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
       fi
     fi
@@ -376,43 +359,60 @@ cl () {
   if [ "${#dirs[@]}" -eq 1 ] &&  [ "$mode" != vim ];then
     dir="${dirs[0]}"
   else
-     while :;do
-       if [ -n "$selection" ];then
-         dir=$(for d in "${dirs[@]}";do echo "$d";done|$selection)
-       else
-         local d
-         local i=$((${#dirs[@]}-1))
-         while [ $i -ge 0 ];do
-           printf "%3d: %s\\n" $i "${dirs[$i]}"
-           ((i--))
-         done
-         printf "\\nChoose directory number: "
-         read -r i
-         if [ -z "$i" ];then
-           return 0
-         fi
-         if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
-           echo "$i is not valid."
-           echo "Enter [0-$((${#dirs[@]}-1))]"
-           return $_SD_CL_ERROR_INVALID_INPUT
-         fi
-         dir=${dirs[$i]}
-       fi
-       if [ -z "$dir" ];then
-         return 0
-       fi
+    # Set selection tool
+    local selection=""
+    if type "$SD_CL_TOOL" >& /dev/null ;then
+      selection=$SD_CL_TOOL
+    elif [ "$SD_CL_TOOL" != "NONE" ];then
+      local tool
+      for tool in sentaku peco percol fzf fzy selecta gof pick;do
+        if type $tool >& /dev/null ;then
+          selection=$tool
+          break
+        fi
+      done
+    fi
+    if [ "$selection" = "sentaku" ];then
+      selection="sentaku -s line"
+    fi
 
-       if [ $mode = vim ];then
-         eval command cd "${dir}"
-         dirs=()
-         _cl_get_dirs
-       else
-         break
-       fi
-     done
+    while :;do
+      if [ -n "$selection" ];then
+        dir=$(for d in "${dirs[@]}";do echo "$d";done|$selection)
+      else
+        local d
+        local i=$((${#dirs[@]}-1))
+        while [ $i -ge 0 ];do
+          printf "%3d: %s\\n" $i "${dirs[$i]}"
+          ((i--))
+        done
+        printf "\\nChoose directory number: "
+        read -r i
+        if [ -z "$i" ];then
+          return 0
+        fi
+        if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
+          echo "$i is not valid."
+          echo "Enter [0-$((${#dirs[@]}-1))]"
+          return $_SD_CL_ERROR_INVALID_INPUT
+        fi
+        dir=${dirs[$i]}
+      fi
+      if [ -z "$dir" ];then
+        return 0
+      fi
+
+      if [ "$mode" = vim ];then
+        eval command cd "${dir}"
+        dirs=()
+        _cl_get_dirs
+      else
+        break
+      fi
+    done
   fi
 
-  if [ $mode = back ];then
+  if [ "$mode" = back ];then
     local i
     i=$(dirs -p -v|grep -- " $dir$"|head -n1|awk '{print $1}')
     command pushd +"${i}" >/dev/null
@@ -420,9 +420,9 @@ cl () {
   fi
 
   if [ "$SD_CL_SHOW_MORE_INFO" -ne 0 ];then
-    if [ $mode = window ];then
+    if [ "$mode" = window ];then
       dir=$(echo "$dir"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
-    elif [ $mode = ranking ];then
+    elif [ "$mode" = ranking ];then
       dir=$(echo "$dir"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
     fi
   fi

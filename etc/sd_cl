@@ -205,7 +205,7 @@ cl () {
       fi
     done
   fi
-  if [ $selection = "sentaku" ];then
+  if [ "$selection" = "sentaku" ];then
     selection="sentaku -s line"
   fi
 
@@ -284,8 +284,7 @@ cl () {
     return 0
   fi
 
-  # Set dirs
-  # Functions for vim mode
+  # Set get_dirs function
   if [ -n "$file" ];then
     if [ "$mode" = ranking ];then
       _sd_cl_ranking_update
@@ -389,6 +388,9 @@ cl () {
          done
          printf "\\nChoose directory number: "
          read -r i
+         if [ -z "$i" ];then
+           return 0
+         fi
          if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
            echo "$i is not valid."
            echo "Enter [0-$((${#dirs[@]}-1))]"

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+
 scripts=(https://raw.github.com/rcmdnk/sd_cl/master/etc/sd_cl)
-if [ x"$prefix" = x ];then
+
+if [ -z "$prefix" ];then
   prefix=/usr/local
 fi
-
-prefix=$(echo $prefix|sed 's|--prefix=||'|sed "s|^~|$HOME|"|sed "s|^\\.|$(pwd)|")
+prefix=${prefix%/}
 
 echo
 echo "###############################################"

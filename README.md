@@ -263,9 +263,9 @@ Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
     # Ranking method
     SD_CL_RANKING_METHOD=${SD_CL_RANKING_METHOD:-2}
     SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
-    SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
     SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
     SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
+    SD_CL_RANKING_EXCLUDE=${SD_CL_RANKING_EXCLUDE:-"$HOME"}
 
     # post cd (overwrite cd (Bash) or chpwd (Zsh))
     SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
@@ -310,12 +310,17 @@ predefined directories, window directories, and ranking directories, respectivel
 * 1: Add a directory when cd is executed.
 * 2: Add a directory at any commands.
 
-If you set `SD_CL_RANKING_WO_HOME=0`, then HOME directory is also added in the ranking.
-
 `SD_CL_RANKING_N_CD` and `SD_CL_RANKING_N_CMD` are parameters of the ranking
-for `SD_CL_RANKING_WO_HOME` is 1 and 2 cases, respectively.
+for `SD_CL_RANKING_METHOD` is 1 and 2 cases, respectively.
 
 If you set the parameter smaller, the ranking becomes more changeable.
+
+If you want to exclude some directories from the ranking,
+set `SD_CL_RANKING_EXCLUDE`.
+Default value is `$HOME`. If you want to exclude several directories,
+give comma separated directories like:
+
+    SD_CL_RANKING_EXCLUDE=/tmp,~/tmp,/home/user/Desktop
 
 If you set `SD_CL_ISPOSTCD` to 0, it doesn't save window's directory
 in GNU screen or tmux.

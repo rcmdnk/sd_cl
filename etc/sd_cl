@@ -52,9 +52,9 @@ SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
 # Ranking method
 SD_CL_RANKING_METHOD=${SD_CL_RANKING_METHOD:-2}
 SD_CL_RANKING_TRIAL_FILE=${SD_CL_RANKING_TRIAL_FILE:-${SD_CL_CONFIG_DIR}/ranking_trial}
-SD_CL_RANKING_WO_HOME=${SD_CL_RANKING_WO_HOME:-1}
 SD_CL_RANKING_N_CD=${SD_CL_RANKING_N_CD:-100}
 SD_CL_RANKING_N_CMD=${SD_CL_RANKING_N_CMD:-1000}
+SD_CL_RANKING_EXCLUDE=${SD_CL_RANKING_EXCLUDE:-"$HOME"}
 
 # post cd (overwrite cd (Bash) or chpwd (Zsh))
 SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
@@ -600,8 +600,18 @@ _sd_cl_ranking_update () {
 }
 
 _sd_cl_ranking () {
-  if [ "$SD_CL_RANKING_WO_HOME" -eq 1 ] && [ "$(pwd)" = "$HOME" ];then
-    return 0
+  if [ "$SD_CL_RANKING_EXCLUDE" != "" ];then
+    local orig_ifs=$IFS
+    IFS=","
+    local exclude=($(echo "$SD_CL_RANKING_EXCLUDE"))
+    IFS=$orig_ifs
+    local dir
+    local curdir="$(pwd)"
+    for dir in "${exclude[@]}";do
+      if [ "$curdir" = "$(eval echo "$dir")" ];then
+        return 0
+      fi
+    done
   fi
   curdir=$(_sd_cl_get_dir)
   if [ "$SD_CL_RANKING" -eq 2 ];then

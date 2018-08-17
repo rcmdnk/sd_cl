@@ -614,7 +614,7 @@ _sd_cl_ranking () {
     done
   fi
   curdir=$(_sd_cl_get_dir)
-  if [ "$SD_CL_RANKING" -eq 2 ];then
+  if [ "$SD_CL_RANKING_METHOD" -eq 2 ];then
     local n=${SD_CL_RANKING_N_CMD}
   else
     local n=${SD_CL_RANKING_N_CD}

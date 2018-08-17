@@ -1,16 +1,50 @@
 sd_cl (Save Directory and Change to the Last directly)
 =====
 
-Useful functions to change directories for Bash/Zsh and GNU screen/tmux.
+Make change directory easy and save your time.
 
-## Installation
+<details>
+  <summary>
+    **Table of Content**
+  </summary>
+  <div>
 
-Get `sd_cl` and set to where you like,
-then, call it from your `.bashrc` or `.zshrc` like
+* [Installation](#installation)
+    * [Get sd_cL](#get-sd_cl)
+        * [cURL](#curl)
+        * [Homebrew at OS X](#homebrew-at-os-x)
+       * [Download](#download)
+    * [Set up sd_cl](#set-up-sd_cl)
+* [Main commands](#main-commands)
+    * [sd (Save Directory)](#sd-save-directory)
+    * [cl (Change to the Last directory)](#cl-change-to-the-last-directory)
+* [Usage](#usage)
+    * [Main functions: sd/cl](#main-functions-sdcl)
+    * [Use selection mode to select from the list](#use-selection-mode-to-select-from-the-list)
+    * [Directory lists](#directory-lists)
+        * [Last directory list](#last-directory-list)
+        * [Pre-defined directory list](#pre-defined-directory-list)
+        * [Window directory list](#window-directory-list)
+        * [Ranking directory list](#ranking-directory-list)
+        * [History list (Back to the history)](#history-list-back-to-the-history)
+        * [Vim like file explorer](#vim-like-file-explorer)
+    * [Tab completion](#tab-completion)
+* [Selection tool](#selection-tool)
+* [Demonstration](#demonstration)
+* [Bonus alias/functions](#bonus-aliasfunctions)
+* [Options](#options)
+* [References](#references)
+  </div>
+</details>
 
-    source /path/to/sd_cl
 
-### cURL
+### Installation
+
+#### Get sd_cL
+
+You can get sd_cl by following methods.
+
+##### cURL
 
 You can use an install script on the web like:
 
@@ -23,7 +57,7 @@ If you want to install other directory, do like:
 
     $ curl -fsSL https://raw.github.com/rcmdnk/sd_cl/install/install.sh|  prefix=~/usr/local/ sh
 
-### Homebrew at OS X
+##### Homebrew at OS X
 
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
 
@@ -47,63 +81,30 @@ and do `brew file install`, you will have all useful scripts in
 
 This installs `sd_cl` to `${HOMEBREW_PREFIX}/etc` (default: `/usr/local/etc/`).
 
-### Download
+##### Download
 
 Or, simply download scripts and set where you like.
 
-## Usage
+    $ wget https://raw.githubusercontent.com/rcmdnk/sd_cl/master/etc/sd_cl
 
-### Main functions: sd/cl
+or you can get it from GitHub directly.
 
-`sd_cl` will load new functions:
+#### Set up sd_cl
 
-* `sd` (Save Directory)
-* `cl` (Change to the Last directory)
+Get `sd_cl` and set to where you like,
+then, source it in your `.bashrc` or `.zshrc` like
 
-`sd` saves current directory to the directory history file.
+```bash
+source /path/to/sd_cl
+```
 
-If you give a directory name, it saves the given directory.
+### Main commands
 
-`cl` is used to change the directory to saved directories.
+#### sd (Save Directory)
 
-If it is called w/o arguments, you will move to the last saved directory by `sd`.
+Commands to manage stored directories.
 
-It is useful if you are working with GNU screen or tmux.
-You can easily move to other window's directory.
-
-* `sd` at Window 1 (e.g. directory: `~/usr/etc`).
-* `cl` at Window 2, then you are in `~/usr/etc` at Window 2, too.
-
-### Use selection mode to select from the history
-
-By the default, 20 directories are kept as a history.
-
-You can choose from the history by using `cl -c` and go there.
-
-This command invokes a selection tool defined by `SD_CL_TOOL`,
-one of installed selection tools or shell interactive selection.
-(See below for more details.)
-
-### Other lists
-
-The default list is made by `sd` command.
-
-You can make another independent list  (predefined list) by `sd -p`.
-
-You can select from the predefined list by `cl -p`
-
-If you are using GNU screen or tmux,
-`cl -w` gives a list of directories in each window/pane.
-
-`cl -r` gives a list of the directory usage ranking.
-
-If you go back, use `cl -b` which shows a history of your `cd`.
-
-`cl -v` starts interactive moving mode like vim.
-
-### Options for sd
-
-Options for `sd` are:
+`sd` w/o arguments saves current directory to **the last directory** (default) list.
 
     Usage: sd [-ecpwrCLh] [directory]
 
@@ -120,9 +121,11 @@ Options for `sd` are:
        -L          Print license and quit
        -h          Print this HELP and quit
 
-### Options for cl
+#### cl (Change to the Last directory)
 
-Options for `cl` are:
+Commands to change the directory to the stored one.
+
+`cl` w/o arguments change the directory to the last saved directory.
 
     Usage: cl [-lcCpwrbvLh] [-n <number> ] [<number>] [<directory>]
     If there are no arguments, you will move to the last saved directory by sd command.
@@ -147,73 +150,134 @@ Options for `cl` are:
 `-l`, `-c`, `-C` and `-n` (`<number>`) are used exclusively.
 
 `-p` (pre-defined directory list), `-w` (window directory list),
-`-r` (ranking directory), or `-b` (moving history)
-change the list file and can be used with other options.
+`-r` (ranking directory), `-b` (moving history), or `-v` (vim mode)
+change the list file.
 
 e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
 
-### Saved directory list and cl selection mode example
+### Usage
 
-If you work w/o `-p`, `-w`, `-r`, or `-b`, `cl` uses saved (by `sd`) directory list.
+#### Main functions: sd/cl
 
-If you use `-c`, `cl` starts selection mode.
+`sd_cl` will load new functions:
 
-The selection mode is given by the tool defined by `SD_CL_TOOL`
-or any of installed tools listed in the Options section (sentaku, peco, fzf, etc...).
+* `sd` (Save Directory)
+* `cl` (Change to the Last directory)
 
-The below is the demo of sentaku:
+`sd` saves current directory to the directory history list.
 
-> [sd_cl demo in asciinema](http://asciinema.org/a/6904)
+If you give a directory name, it saves the given directory.
 
-In the selection mode, you can use:
+`cl` is used to change the directory to saved directories.
 
-* j: Select 1 down.
-* [n]j: Select [n] below. e.g.: 11j: Select 11th below.
-* k: Select 1 up.
-* [n]k: Select [n] up.
-* d: Delete selected directory.
-* gg: Select 1st directory.
-* G: Select the last directory.
-* [n]gg/G: Select n-th directory.
-* Enter: Go to selected directory and quit.
-* q: Quit.
+If it is called w/o arguments, you will move to the last saved directory by `sd`.
 
-### Pre-defined directory list
+#### Use selection mode to select from the list
 
-If you use `-p`, it uses `pre-defined` directory list.
+By the default, 20 directories are kept as a history.
 
-You can update the pre-defined list by `sd -e -p`.
+You can choose from the history by using `cl -c` and go there.
 
-### Window directory list
+This command invokes a selection tool defined by `SD_CL_TOOL`,
+one of installed selection tools or shell interactive selection.
+(See below for more details.)
 
-If you are working in GNU screen or tmux, each window's directory is saved automatically.
-You can change a directory to there by using `-w` option.
+If you give `-p`, `-w`, `-r`, `-b` or `-v` instead of `-c`,
+then each list is used for the selection instead of the last directory list.
+(see next section.)
 
-It shows `window_number` `pane_number` (always 0 for GNU screen) and directory.
+#### Directory lists
 
-### Ranking directory
+##### Last directory list
 
-If you use `-p`, it uses `ranking` directory list,
-which is defined by how much you went in with `cd` ($HOME directory is excluded).
+This is default list.
 
-The list shows the number of cd to the directory.
+The list is stored in `SD_CL_LASTDIR_FILE`.
 
-### Back to the history
+`sd` w/o any arguments stores current directory to this list.
 
-With `-b`, you can go back to the previous directories.
-This is available if `SD_CL_ISCDWRAP=1`,
+`cl` calls this list by default.
+
+The number of directories stored in the list is defined by `SD_CL_N`.
+
+##### Pre-defined directory list
+
+If you use `-p` for `sd` or `cl`, it uses pre-defined directory list,
+stored in `SD_CL_PREDEF_FILE`.
+
+This list is similar to the last directory list
+but you can store some dedicated directories which should not be modified by `sd`.
+
+You can edit the pre-defined list by `sd -e -p`.
+
+##### Window directory list
+
+If you are working in GNU screen or tmux,
+each window's directory is saved automatically.
+
+The list is stored in `SD_CL_WINDOW_FILE`.
+
+You can call this list by `cl -w`.
+
+By using `cl -w -l`, you can see the list with
+`window_number` and `pane_number` (always 0 for GNU screen).
+
+If you want to see these numbers even in the selection mode,
+set `SD_CL_SHOW_MORE_INFO=1`
+
+##### Ranking directory list
+
+`sd_cl` makes a directory ranking by your usage of directories.
+
+The list is stored in `SD_CL_RANKING_FILE`.
+
+The list can be called by `cl -r`.
+
+`cl -r -l` shows the ranking point, too.
+
+As same as window directory list,
+if `SD_CL_SHOW_MORE_INFO=1`, then the ranking point is shown in the selection mode, too.
+
+The default ranking method (`SD_CL_RANKING_METHOD=2`) depends on how much you execute command in the directory.
+After any commands, the ranking point is added to the current directory.
+
+If you set `SD_CL_RANKING_METHOD=1`,
+the point is added only when `cd` is executed.
+
+If you don't want to make the ranking list, set `SD_CL_RANKING_METHOD=0`.
+
+To exclude directories from the ranking,
+set `SD_CL_RANKING_EXCLUDE`.
+It can be comma separated list if you want to more than one directories, like:
+
+    SD_CL_RANKING_EXCLUDE=/tmp,~/tmp,/home/user/Desktop
+
+The default value is `SD_CL_RANKING_EXCLUDE=$HOME`.
+
+The ranking behavior can be changed by
+`SD_CL_RANKING_N_CD` (default: 100) or `SD_CL_RANKING_N_CMD` (default: 1000)
+for `SD_CL_RANKING_METHOD=1` case or `SD_CL_RANKING_METHOD=2` case, respectively.
+
+The smaller the value is set, the more the ranking is changable.
+
+##### History list (Back to the history)
+
+With `cl -b`, you can go back to the directories in your cd history.
+
+This is available if `SD_CL_ISCDWRAP=1` (default),
 i.e. it uses the history of `pushd`.
 
-### Vim like file explorer
+##### Vim like file explorer
 
 Option `-v` will give you the continuous selection mode to change the directory,
 like vim file explorer.
 
-### Tab completion
+#### Tab completion
 
 Tab completion is available both for Bash and Zsh.
 
     $ cl [Tab] # Completion with saved directory list.
+    $ cl -c [Tab] # Same as above.
     $ cl -p [Tab] # Completion with pre-defined directory list.
     $ cl -w [Tab] # Completion with window directory list.
     $ cl -r [Tab] # Completion with ranking directory list.
@@ -221,9 +285,33 @@ Tab completion is available both for Bash and Zsh.
 
 If you give directory name to `cl`, you will just move to the directory like normal `cd`.
 
+### Selection tool
+
+For the selection mode, you can use your favorite selection tool.
+
+The selection tool must accept pipe line input list,
+be able to select a line, and return the line.
+
+Following tools are searched and used if exists.
+
+* [sentaku](https://github.com/rcmdnk/sentaku) (usse `sentaku -s line` option)
+* [peco](https://github.com/peco/peco)
+* [percol](https://github.com/mooz/percol)
+* [fzf](https://github.com/junegunn/fzf)
+* [fzy](https://github.com/jhawthorn/fzy)
+* [selecta](https://github.com/garybernhardt/selecta)
+* [gof](https://github.com/mattn/gof)
+* [pick](https://github.com/mptre/pick)
+
+You can decide top priority selection tool as you like by setting `SD_CL_TOOL`, like
+
+    SD_CL_TOOL=peco
+
+in your **.bashrc** or **.zshrc**.
+
 ### Demonstration
 
-Demonstration with Bash 4.3.42.
+Demonstration with Bash 4.3.42, with sentaku as section tool.
 
 ![completion](http://rcmdnk.github.io/images/post/20160218_sd_cl.gif)
 
@@ -234,13 +322,32 @@ Demonstration with Bash 4.3.42.
 * `cl test2<Enter>`: Change directory to **/tmp/test/test2**, as it is an unique candidate for `test2`.
 * `cl -C`: Clear the list.
 
+Another demonstration
+
+The below is the demo of sentaku:
+
+> [sd_cl demo in asciinema](http://asciinema.org/a/6904)
+
+In the selection mode of sentaku, you can use:
+
+* j: Select 1 down.
+* [n]j: Select [n] below. e.g.: 11j: Select 11th below.
+* k: Select 1 up.
+* [n]k: Select [n] up.
+* d: Delete (only from the list) selected directory.
+* gg: Select 1st directory.
+* G: Select the last directory.
+* [n]gg/G: Select n-th directory.
+* Enter: Go to selected directory and quit.
+* q: Quit.
+
 ### Bonus alias/functions
 
 * bd (back to directory): alias for to `popd >/dev/null`
 * cd : `cd` is wrapped with `popd`. Useful to use with `bd`.
 * cdpwd : works as `cd -P .`, i.e. resolves symbolic links in the path.
 
-## Options
+### Options
 
 Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
 
@@ -277,18 +384,6 @@ Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
     # cd wrap to pushd/popd
     SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 
-
-First, you can decide selection tool as you like by `SD_CL_TOOL`.
-If it is not specified, it will searches followings:
-
-* [sentaku](https://github.com/rcmdnk/sentaku),
-* [peco](https://github.com/peco/peco)
-* [percol](https://github.com/mooz/percol)
-* [fzf](https://github.com/junegunn/fzf)
-* [fzy](https://github.com/jhawthorn/fzy)
-* [selecta](https://github.com/garybernhardt/selecta)
-* [gof](https://github.com/mattn/gof)
-* [pick](https://github.com/mptre/pick)
 
 If it is "NONE" or no selection tool is installed,
 it invokes shell interactive mode.
@@ -366,6 +461,6 @@ replace your `builtin(command) cd` command with
 i.e., if you want to enable both in Bash, you should replace above `builtin cd "$@"`
 with `wrap_cd "$@"`.
 
-## References
+### References
 
 * [ターミナルでのディレクトリ移動を保存、取り出しする](http://rcmdnk.github.io/blog/2013/12/27/computer-bash-zsh-sd-cl/)

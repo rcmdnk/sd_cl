@@ -8,34 +8,68 @@ Make change directory easy and save your time.
   </summary>
   <div>
 
+* [Demo](#demo)
 * [Installation](#installation)
-    * [Get sd_cL](#get-sd_cl)
-        * [cURL](#curl)
-        * [Homebrew at OS X](#homebrew-at-os-x)
-       * [Download](#download)
-    * [Set up sd_cl](#set-up-sd_cl)
+   * [Get sd_cL](#get-sd_cl)
+      * [cURL](#curl)
+      * [Homebrew at OS X](#homebrew-at-os-x)
+      * [Download](#download)
+   * [Set up sd_cl](#set-up-sd_cl)
 * [Main commands](#main-commands)
-    * [sd (Save Directory)](#sd-save-directory)
-    * [cl (Change to the Last directory)](#cl-change-to-the-last-directory)
+   * [sd (Save Directory)](#sd-save-directory)
+   * [cl (Change to the Last directory)](#cl-change-to-the-last-directory)
 * [Usage](#usage)
-    * [Main functions: sd/cl](#main-functions-sdcl)
-    * [Use selection mode to select from the list](#use-selection-mode-to-select-from-the-list)
-    * [Directory lists](#directory-lists)
-        * [Last directory list](#last-directory-list)
-        * [Pre-defined directory list](#pre-defined-directory-list)
-        * [Window directory list](#window-directory-list)
-        * [Ranking directory list](#ranking-directory-list)
-        * [History list (Back to the history)](#history-list-back-to-the-history)
-        * [Vim like file explorer](#vim-like-file-explorer)
-    * [Tab completion](#tab-completion)
+   * [Main functions: sd/cl](#main-functions-sdcl)
+   * [Use selection mode to select from the list](#use-selection-mode-to-select-from-the-list)
+   * [Directory lists](#directory-lists)
+      * [Last directory list](#last-directory-list)
+      * [Pre-defined directory list](#pre-defined-directory-list)
+      * [Window directory list](#window-directory-list)
+      * [Ranking directory list](#ranking-directory-list)
+      * [History list (Back to the history)](#history-list-back-to-the-history)
+      * [Vim like file explorer](#vim-like-file-explorer)
+   * [Tab completion](#tab-completion)
 * [Selection tool](#selection-tool)
-* [Demonstration](#demonstration)
 * [Bonus alias/functions](#bonus-aliasfunctions)
 * [Options](#options)
 * [References](#references)
+
   </div>
 </details>
 
+## Demo
+
+* [Main commands](#main-commands)
+
+![main functions](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_main.gif)
+
+* [Selection tool](#selection-tool)
+
+![selection tool](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_selection_tool.gif)
+
+* [Pre-defined directory list](#pre-defined-directory-list)
+
+![predef list](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_predef2.gif)
+
+* [Tab completion](#tab-completion)
+
+![completion](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_completion.gif)
+
+* [Window directory list](#window-directory-list)
+
+![window list](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_screen.gif)
+
+* [Ranking directory list](#ranking-directory-list)
+
+![ranking list](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_ranking.gif)
+
+* [History list (Back to the history)](#history-list-back-to-the-history)
+
+![back to the history](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_back.gif)
+
+* [Vim like file explorer](#vim-like-file-explorer)
+
+![vim mode](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_vim.gif)
 
 ## Installation
 
@@ -307,38 +341,6 @@ You can decide top priority selection tool as you like by setting `SD_CL_TOOL`, 
     SD_CL_TOOL=peco
 
 in your **.bashrc** or **.zshrc**.
-
-## Demonstration
-
-Demonstration with Bash 4.3.42, with sentaku as section tool.
-
-![completion](http://rcmdnk.github.io/images/post/20160218_sd_cl.gif)
-
-* `sd`: Save current directory.
-* `cl -l`: Show the list.
-* `cl test<Tab>`: Completion with paths including `test`.
-* `cl test<Tab><Enter>`: Enter selection mode with paths including `test`.
-* `cl test2<Enter>`: Change directory to **/tmp/test/test2**, as it is an unique candidate for `test2`.
-* `cl -C`: Clear the list.
-
-Another demonstration
-
-The below is the demo of sentaku:
-
-> [sd_cl demo in asciinema](http://asciinema.org/a/6904)
-
-In the selection mode of sentaku, you can use:
-
-* j: Select 1 down.
-* [n]j: Select [n] below. e.g.: 11j: Select 11th below.
-* k: Select 1 up.
-* [n]k: Select [n] up.
-* d: Delete (only from the list) selected directory.
-* gg: Select 1st directory.
-* G: Select the last directory.
-* [n]gg/G: Select n-th directory.
-* Enter: Go to selected directory and quit.
-* q: Quit.
 
 ## Bonus alias/functions
 

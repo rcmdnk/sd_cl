@@ -210,7 +210,9 @@ If it is called w/o arguments, you will move to the last saved directory by `sd`
 
 By the default, 20 directories are kept as a history.
 
-You can choose from the history by using `cl -c` and go there.
+You can choose from the history by using
+
+    $ cl -c
 
 This command invokes a selection tool defined by `SD_CL_TOOL`,
 one of installed selection tools or shell interactive selection.
@@ -218,7 +220,37 @@ one of installed selection tools or shell interactive selection.
 
 If you give `-p`, `-w`, `-r`, `-b` or `-v` instead of `-c`,
 then each list is used for the selection instead of the last directory list.
-(see next section.)
+(see [Directory lists](#directory-lists).)
+
+### Filtering
+
+If you give a part of the directory name like:
+
+    $ cl foo
+
+then it starts a selection mode with directories including `foo`.
+
+If it is only 1, it directly changes a directory to there.
+
+### Tab completion
+
+Tab completion is available for both Bash and Zsh.
+
+    $ cl [Tab] # Completion with saved directory list.
+    $ cl foo [Tab] # Completion with directory names including 'foo'.
+
+If you give a part of directory name to `cl`,
+you will just move to the directory like normal `cd`.
+
+After tab completion, if there are still some candidates,
+`cl` starts the selection mode.
+
+### Jump to N-th directory
+
+If you give a number, N, to `cl`,
+you will jump into N-th direcoty on the list.
+
+    $ cl 3
 
 ### Directory lists
 
@@ -306,19 +338,6 @@ i.e. it uses the history of `pushd`.
 Option `-v` will give you the continuous selection mode to change the directory,
 like vim file explorer.
 
-### Tab completion
-
-Tab completion is available both for Bash and Zsh.
-
-    $ cl [Tab] # Completion with saved directory list.
-    $ cl -c [Tab] # Same as above.
-    $ cl -p [Tab] # Completion with pre-defined directory list.
-    $ cl -w [Tab] # Completion with window directory list.
-    $ cl -r [Tab] # Completion with ranking directory list.
-    $ cl -b [Tab] # Completion with moving history.
-
-If you give directory name to `cl`, you will just move to the directory like normal `cd`.
-
 ## Selection tool
 
 For the selection mode, you can use your favorite selection tool.
@@ -348,11 +367,11 @@ simple shell selection tool is launched.
 
 If you want to use it as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shell`.
 
-## Bonus alias/functions
+## Bonus functions
 
-* bd (back to directory): alias for to `popd >/dev/null`
-* cd : `cd` is wrapped with `popd`. Useful to use with `bd`.
-* cdpwd : works as `cd -P .`, i.e. resolves symbolic links in the path.
+* bd (back directory): wrap function for to `popd >/dev/null`
+* cdpwd : works as `cd $(pwd -P)`, i.e. resolves symbolic links in the path.
+* cd : `cd` is wrapped with `pushd`. Useful to use with `bd`.
 
 ## Options
 

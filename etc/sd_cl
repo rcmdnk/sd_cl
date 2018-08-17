@@ -711,7 +711,7 @@ _wrap_cd () {
   pushd "$dir" >/dev/null
 }
 
-# Alias for popd
+# wrap function for popd
 bd () {
   if [ $# -eq 0 ];then
     # 0 is current directory

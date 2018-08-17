@@ -325,7 +325,7 @@ For the selection mode, you can use your favorite selection tool.
 The selection tool must accept pipe line input list,
 be able to select a line, and return the line.
 
-Following tools are searched and used if exists.
+Following tools are searched for and one of which is used if exists.
 
 * [rcmdnk/sentaku: Utility to make sentaku (selection, 選択(sentaku)) window with shell command.](https://github.com/rcmdnk/sentaku) (use `sentaku -s line` option)
 * [peco/peco: Simplistic interactive filtering tool](https://github.com/peco/peco)

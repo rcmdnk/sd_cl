@@ -81,7 +81,7 @@ By the default, 20 directories are kept as a history.
 You can choose from the history by using `cl -c` and go there.
 
 This command invokes a selection tool defined by `SD_CL_TOOL`,
-, one of installed selection tools or shell interactive selection.
+one of installed selection tools or shell interactive selection.
 (See below for more details.)
 
 ### Other lists

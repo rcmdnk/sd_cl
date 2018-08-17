@@ -160,7 +160,7 @@ Commands to change the directory to the stored one.
 
 `cl` w/o arguments change the directory to the last saved directory.
 
-    Usage: cl [-lcCpwrbvLh] [-n <number> ] [<number>] [<directory>]
+    Usage: cl [-lecCpwrbvLh] [-n <number> ] [<number>] [<directory>]
     If there are no arguments, you will move to the last saved directory by sd command.
     If you give any directory name, it searches for it in saved directories
     and cd to there if only one is found.
@@ -168,6 +168,7 @@ Commands to change the directory to the stored one.
 
     Arguments:
        -l          Show saved directories
+       -e          Edit directory list file
        -c          Show saved directories and choose a directory in ~/.config/sd_cl/lastdir
        -C          Clear directories
        <number>    Move to <number>-th last directory

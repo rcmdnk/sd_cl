@@ -79,6 +79,13 @@ _sd_cl_reset_file () {
   : > "$file"
 }
 
+_sd_cl_edit_file () {
+  if [ -n "$1" ];then
+    _sd_cl_check_file "$1"
+    ${EDITOR:-"vi"} "$1"
+  fi
+}
+
 _sd_cl_get_dir () {
   if [ $# -ge 1 ];then
     local dir="$1"
@@ -128,10 +135,10 @@ sd () {
       "-w" ) file=${SD_CL_WINDOW_FILE};;
       "-r" ) file=${SD_CL_RANKING_FILE};;
       "-C" ) cleardir=1;;
-      "-L" ) echo "$_SD_CL_LICENSE"; return 0;;
+      "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
         echo "$help"|${PAGER:-less} >/dev/tty
-        return 0
+        return
         ;;
       "--" ) shift; dir="$*"; break;;
       -* )
@@ -145,15 +152,14 @@ sd () {
 
   # Edit predefined dir
   if [ "$edit" -eq 1 ];then
-    _sd_cl_check_file "$file"
-    ${EDITOR:-"vi"} "$file"
-    return 0
+    _sd_cl_edit_file "$file"
+    return
   fi
 
   # Clear
   if [ "$cleardir" -eq 1 ];then
     _sd_cl_reset_file "$file"
-    return 0
+    return
   fi
 
   # Set Save Dir
@@ -185,7 +191,7 @@ cl () {
     local ld="$(head -n1 "${SD_CL_LASTDIR_FILE}")"
     if [ "$ld" != "" ];then
       eval command cd "$ld" # eval to expand ~
-      return 0
+      return
     else
       echo "There is no saved directory."
       return $_SD_CL_ERROR_NO_SAVED_DIRECTORY
@@ -194,7 +200,7 @@ cl () {
 
   # Help
   local help="
-  Usage: cl [-lcCpwrbvLh] [-n <number> ] [<number>] [<directory>]
+  Usage: cl [-lecCpwrbvLh] [-n <number> ] [<number>] [<directory>]
   If there are no arguments, you will move to the last saved directory by sd command.
   If you give any directory name, it searches for it in saved directories
   and cd to there if only one is found.
@@ -202,6 +208,7 @@ cl () {
 
   Arguments:
      -l          Show saved directories
+     -e          Edit directory list file
      -c          Show saved directories and choose a directory
      -C          Clear directories
      <number>    Move to <number>-th last directory
@@ -217,6 +224,7 @@ cl () {
 
   # Variables
   local list=0
+  local edit=0
   local mode="lastdir"
   local cleardir=0
   local n=""
@@ -227,6 +235,7 @@ cl () {
   while [ $# -gt 0 ];do
     case $1 in
       "-l" ) list=1;;
+      "-e" ) edit=1;;
       "-c" ) file=${SD_CL_LASTDIR_FILE};mode="lastdir";;
       "-n" ) n="$2"; shift;;
       "-p" ) file=${SD_CL_PREDEF_FILE};mode="predef";;
@@ -235,10 +244,10 @@ cl () {
       "-v" ) file="";mode="vim";;
       "-b" ) file="";mode="back";;
       "-C" ) cleardir=1;;
-      "-L" ) echo "$_SD_CL_LICENSE"; return 0;;
+      "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
         echo "$help"|${PAGER:-less}
-        return 0
+        return
         ;;
       "--" ) shift; dir="$*"; break;;
       -* )
@@ -264,7 +273,13 @@ cl () {
     elif [ "$mode" = "back" ];then
       dirs -c
     fi
-    return 0
+    return
+  fi
+
+  # Edit
+  if [ "$edit" -eq 1 ];then
+    _sd_cl_edit_file "$file"
+    return
   fi
 
   # Set get_dirs function
@@ -305,7 +320,7 @@ cl () {
   # Check dirs
   if [ "${#dirs[@]}" -eq 0 ];then
     echo "No directory is stored for $mode"
-    return 0
+    return
   fi
 
   # List up
@@ -389,7 +404,7 @@ cl () {
         printf "\\nChoose directory number: "
         read -r i
         if [ -z "$i" ];then
-          return 0
+          return
         fi
         if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
           echo "$i is not valid."
@@ -399,7 +414,7 @@ cl () {
         dir=${dirs[$i]}
       fi
       if [ -z "$dir" ];then
-        return 0
+        return
       fi
 
       if [ "$mode" = vim ];then
@@ -416,7 +431,7 @@ cl () {
     local i
     i=$(dirs -p -v|grep -- " $dir$"|head -n1|awk '{print $1}')
     command pushd +"${i}" >/dev/null
-    return 0
+    return
   fi
 
   if [ "$SD_CL_SHOW_MORE_INFO" -ne 0 ];then
@@ -455,7 +470,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         '-h:: :->non'
       local ldf=""
       if echo "$state"|grep -q non;then
-        return 0
+        return
       elif echo "$state"|grep -q predef;then
         ldf=${SD_CL_PREDEF_FILE}
       elif echo "$state"|grep -q window;then
@@ -528,14 +543,14 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
 
       if [[ "$cur" == -* ]];then
         COMPREPLY=($( compgen -W "${opts[*]}" -- "$cur"))
-        return 0
+        return
       elif [ "${COMP_WORDS[$i]}" != "" ] && echo "${opts[@]}"|grep -q -- "$cur";then
         COMPREPLY=("$cur")
-        return 0
+        return
       elif [ $nocomp -eq 1 ];then
-        return 0
+        return
       elif [[ "$prev" != -* && $COMP_CWORD -ne 1 ]];then
-        return 0
+        return
       fi
 
       local ldf=${SD_CL_LASTDIR_FILE}
@@ -613,7 +628,7 @@ _sd_cl_ranking () {
     local curdir="$(pwd)"
     for dir in "${exclude[@]}";do
       if [ "$curdir" = "$(eval echo "$dir")" ];then
-        return 0
+        return
       fi
     done
   fi
@@ -655,7 +670,7 @@ _post_cd () {
     _sd_cl_ranking
   fi
   if [ -z "$STY" ] && [ -z "$TMUX" ];then
-    return 0
+    return
   fi
   if [ -n "$STY" ];then
     local win="$WINDOW"
@@ -681,13 +696,13 @@ _wrap_cd () {
   local dir="$*"
   if [ "$*" = "" ];then
     if [ "$(pwd)" = "$HOME" ];then
-      return 0
+      return
     else
       dir="$HOME"
     fi
   elif [ "$*" = "-" ];then
     pushd >/dev/null
-    return 0
+    return
   else
     if [ -f "$*" ];then
       dir=$(dirname "$*")

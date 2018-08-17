@@ -378,7 +378,7 @@ cl () {
     local selection=""
     if type "$SD_CL_TOOL" >& /dev/null ;then
       selection=$SD_CL_TOOL
-    elif [ "$SD_CL_TOOL" != "NONE" ];then
+    elif [ "$SD_CL_TOOL" != "NONE" ] && [ "$SD_CL_TOOL" != "shell" ];then
       local tool
       for tool in sentaku peco percol fzf fzy selecta gof pick;do
         if type $tool >& /dev/null ;then

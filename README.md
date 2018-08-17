@@ -343,6 +343,11 @@ You can decide top priority selection tool as you like by setting `SD_CL_TOOL`, 
 
 in your **.bashrc** or **.zshrc**.
 
+If any of tools is not available,
+simple shell selection tool is launched.
+
+If you want to use it as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shell`.
+
 ## Bonus alias/functions
 
 * bd (back to directory): alias for to `popd >/dev/null`

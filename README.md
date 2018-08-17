@@ -327,14 +327,14 @@ be able to select a line, and return the line.
 
 Following tools are searched and used if exists.
 
-* [sentaku](https://github.com/rcmdnk/sentaku) (usse `sentaku -s line` option)
-* [peco](https://github.com/peco/peco)
-* [percol](https://github.com/mooz/percol)
-* [fzf](https://github.com/junegunn/fzf)
-* [fzy](https://github.com/jhawthorn/fzy)
-* [selecta](https://github.com/garybernhardt/selecta)
-* [gof](https://github.com/mattn/gof)
-* [pick](https://github.com/mptre/pick)
+* [rcmdnk/sentaku: Utility to make sentaku (selection, 選択(sentaku)) window with shell command.](https://github.com/rcmdnk/sentaku) (use `sentaku -s line` option)
+* [peco/peco: Simplistic interactive filtering tool](https://github.com/peco/peco)
+* [mooz/percol: adds flavor of interactive filtering to the traditional pipe concept of UNIX shell](https://github.com/mooz/percol)
+* [junegunn/fzf: A command-line fuzzy finder](https://github.com/junegunn/fzf)
+* [jhawthorn/fzy: A better fuzzy finder](https://github.com/jhawthorn/fzy)
+* [garybernhardt/selecta: A fuzzy text selector for files and anything else you need to select. Use it from vim, from the command line, or anywhere you can run a shell command.](https://github.com/garybernhardt/selecta)
+* [mattn/gof](https://github.com/mattn/gof)
+* [mptre/pick: A fuzzy search tool for the command-line](https://github.com/mptre/pick)
 
 You can decide top priority selection tool as you like by setting `SD_CL_TOOL`, like
 

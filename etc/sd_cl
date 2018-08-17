@@ -167,9 +167,11 @@ sd () {
     return $_SD_CL_ERROR_NO_SUCH_DIRECTORY
   else
     _sd_cl_check_file "$file"
-    local pre_list="$(grep -v "^${dir}$" < "$file"|head -n"$((SD_CL_N-1))")"
+    local pre_list="$(grep -v "^${dir}$" < "$file"|grep -v '^\s*$'|head -n"$((SD_CL_N-1))")"
     echo "$dir" > "$file"
-    echo "$pre_list" >> "$file"
+    if [ -n "$pre_list" ];then
+      echo "$pre_list" >> "$file"
+    fi
   fi
 }
 
@@ -654,19 +656,19 @@ _post_cd () {
     return 0
   fi
   if [ -n "$STY" ];then
-    local window="$WINDOW"
+    local win="$WINDOW"
     local pane=0
   else
-    local window="$(tmux display -p '#I')"
+    local win="$(tmux display -p '#I')"
     local pane="$(tmux display -p '#P')"
   fi
   local wdf=${SD_CL_WINDOW_FILE}
   _sd_cl_check_file "$wdf"
   local dir=$(_sd_cl_get_dir)
-  if grep -q "^$window $pane " "$wdf";then
-    local wd=$(sed "s|^$window $pane .*$|$window $pane $dir|" "$wdf"|sort -n)
+  if grep -q "^$win $pane " "$wdf";then
+    local wd=$(sed "s|^$win $pane .*$|$win $pane $dir|" "$wdf"|sort -n)
   else
-    local wd=$(cat "$wdf" && echo "$window $pane $dir"|sort -n)
+    local wd=$(cat "$wdf" && echo "$win $pane $dir"|sort -n)
   fi
   echo "$wd" > "${wdf}"
 }

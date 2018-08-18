@@ -472,7 +472,7 @@ cl () {
 
   if [ "$mode" = back ];then
     local i
-    i=$(builtin dirs -p -v|grep -- " $dir$"|head -n1|awk '{print $1}')
+    i=$(builtin dirs -p -v|grep "[[:space:]]$dir$"|head -n1|awk '{print $1}')
     builtin pushd +"${i}" >/dev/null
     return
   fi

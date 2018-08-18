@@ -64,6 +64,9 @@ SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
 SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
 SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
 
+# ZSH keybind
+SD_CL_ZSH_KEYBIND=1
+
 # cd wrap
 SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 # }}}
@@ -72,7 +75,6 @@ SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 _SD_CL_BD_LIST=()
 _SD_CL_FD_LIST=()
 # }}}
-
 
 # support functions {{{
 _sd_cl_cd () {
@@ -658,6 +660,26 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
     complete -F _fd fd
     # }}}
   fi
+fi
+# }}}
+
+# Zsh keybind {{{
+if [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
+  _zsh_bd () {
+    echo bd
+    bd
+    zle reset-prompt
+  }
+  _zsh_fd () {
+    echo fd
+    fd
+    zle reset-prompt
+  }
+  zle -N bd _zsh_bd
+  zle -N fd _zsh_fd
+
+  bindkey '^[o' bd
+  bindkey '^[i' fd
 fi
 # }}}
 

@@ -64,18 +64,20 @@ SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
 SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
 SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
 
-# cd wrap to pushd/popd
+# cd wrap
 SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 # }}}
 
 # Other variables {{{
-_SD_CL_BACK_HISTORY=()
+_SD_CL_BD_LIST=()
+_SD_CL_FD_LIST=()
 # }}}
 
 
 # support functions {{{
 _sd_cl_cd () {
-  _SD_CL_BACK_HISTORY=()
+  _SD_CL_FD_LIST=()
+  _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
   eval builtin cd "$1"
 }
 
@@ -240,7 +242,8 @@ cl () {
      -p          Move to pre-defiend dirctory in $SD_CL_PREDEF_FILE
      -w          Move to other window's (screen/tmux) dirctory in $SD_CL_WINDOW_FILE
      -r          Move to ranking directory in $SD_CL_RANKING_FILE
-     -b          Move back to moving histories
+     -b          Move back in moving histories
+     -f          Move forward in moving histories
      -v          Move from current directory, like Vim
      -L          Print license and quit
      -h          Print this HELP and quit
@@ -267,6 +270,7 @@ cl () {
       "-r" ) file=${SD_CL_RANKING_FILE};mode="ranking";;
       "-v" ) file="";mode="vim";;
       "-b" ) file="";mode="back";;
+      "-f" ) file="";mode="forward";;
       "-C" ) cleardir=1;;
       "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
@@ -295,7 +299,9 @@ cl () {
     if [ -n "$file" ];then
       : > "$file"
     elif [ "$mode" = "back" ];then
-      builtin dirs -c
+      _SD_CL_BD_LIST=()
+    elif [ "$mode" = "forward" ];then
+      _SD_CL_FD_LIST=()
     fi
     return
   fi
@@ -321,7 +327,6 @@ cl () {
     }
   elif [ "$mode" = vim ];then
     _cl_get_dirs () {
-      # Get variables
       for d in *;do
         if [ ! -d "$d" ];then
           continue
@@ -332,11 +337,11 @@ cl () {
     }
   elif [ "$mode" = back ];then
     _cl_get_dirs () {
-      # Get variables
-      local orig_ifs=$IFS
-      IFS=$'\n'
-      dirs=($(builtin dirs -p))
-      IFS=$orig_ifs
+      dirs=("${_SD_CL_BD_LIST[@]}")
+    }
+  elif [ "$mode" = forward ];then
+    _cl_get_dirs () {
+      dirs=("${_SD_CL_FD_LIST[@]}")
     }
   fi
   _cl_get_dirs
@@ -452,9 +457,42 @@ cl () {
   fi
 
   if [ "$mode" = back ];then
-    local i
-    i=$(builtin dirs -p -v|grep "[[:space:]]$dir$"|head -n1|awk '{print $1}')
-    builtin pushd +"${i}" >/dev/null
+    local dirs_tmp=("${_SD_CL_BD_LIST[@]}")
+    _SD_CL_BD_LIST=()
+    _SD_CL_FD_LIST=("$(pwd)" "${_SD_CL_FD_LIST[@]}")
+    local store=0
+    for d in "${dirs_tmp[@]}";do
+      if [ "$store" -eq 1 ];then
+        _SD_CL_BD_LIST=("${_SD_CL_BD_LIST[@]}" "$d")
+      fi
+      if [ "$d" = "$dir" ];then
+        store=1
+      fi
+      if [ "$store" -eq 0 ];then
+        _SD_CL_FD_LIST=("$d" "${_SD_CL_FD_LIST[@]}")
+      fi
+    done
+    builtin cd "$dir"
+    return
+  fi
+
+  if [ "$mode" = forward ];then
+    local dirs_tmp=("${_SD_CL_FD_LIST[@]}")
+    _SD_CL_FD_LIST=()
+    _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
+    local store=0
+    for d in "${dirs_tmp[@]}";do
+      if [ "$store" -eq 1 ];then
+        _SD_CL_FD_LIST=("${_SD_CL_FD_LIST[@]}" "$d")
+      fi
+      if [ "$d" = "$dir" ];then
+        store=1
+      fi
+      if [ "$store" -eq 0 ];then
+        _SD_CL_BD_LIST=("$d" "${_SD_CL_BD_LIST[@]}")
+      fi
+    done
+    builtin cd "$dir"
     return
   fi
 
@@ -490,6 +528,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         '-w:: :->window'\
         '-r:: :->ranking'\
         '-b:: :->back'\
+        '-f:: :->forward'\
         '-v:: :->non'\
         '-h:: :->non'
       local ldf=""
@@ -502,7 +541,9 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       elif echo "$state"|grep -q ranking;then
         ldf=${SD_CL_RANKING_FILE}
       elif echo "$state"|grep -q back;then
-        :
+        ldf=back
+      elif echo "$state"|grep -q forward;then
+        ldf=forward
       elif echo "$state"|grep -q lastdir;then
         ldf=${SD_CL_LASTDIR_FILE}
       else
@@ -517,7 +558,12 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         _sd_cl_check_file "$pdf"
         compadd $(cat "$ldf")
         compadd $(cat "$pdf")
-        compadd $(builtin dirs -p)
+        compadd "${_SD_CL_BD_LIST[@]}"
+        compadd "${_SD_CL_FD_LIST[@]}"
+      elif [ "$ldf" = back ];then
+        compadd "${_SD_CL_BD_LIST[@]}"
+      elif [ "$ldf" = forward ];then
+        compadd "${_SD_CL_FD_LIST[@]}"
       elif [ -n "$ldf" ];then
         if echo "$state"|grep -q window;then
           compadd $(cat $ldf|cut -d' ' -f 3-)
@@ -526,21 +572,20 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         else
           compadd $(cat $ldf)
         fi
-      else
-        compadd $(builtin dirs -p)
       fi
       IFS=$orig_ifs
     }
     compdef _cl cl
     # }}}
     _bd () { # {{{
-      typeset -A opt_args
-      local orig_ifs=$IFS
-      IFS=$'\n'
-      compadd "$(builtin dirs -p)"
-      IFS=$orig_ifs
+      compadd "${_SD_CL_BD_LIST[@]}"
     }
     compdef _bd bd
+    # }}}
+    _fd () { # {{{
+      compadd "${_SD_CL_FD_LIST[@]}"
+    }
+    compdef _fd fd
     # }}}
   elif [ -n "$BASH_VERSION" ];then
     _cl () { # {{{
@@ -581,6 +626,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       local pdf=${SD_CL_PREDEF_FILE}
       local wdf=${SD_CL_WINDOW_FILE}
       local rdf=${SD_CL_RANKING_FILE}
+      local dd=""
       local d=""
 
       local orig_ifs=$IFS
@@ -588,11 +634,12 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       case $prev in
         -c)_sd_cl_check_file "$ldf" && d=$(cat "$ldf");;
         -p)_sd_cl_check_file "$pdf" && d=$(cat "$pdf");;
-        -w)_sd_cl_check_file "$ldf" && d=$(cat "$wdf"|cut -d' ' -f3-);;
-        -r)_sd_cl_check_file "$rdf" && d=$(cat "$rdf"|cut -d' ' -f2-);;
-        -b)d=$(builtin dirs -p);;
+        -w)_sd_cl_check_file "$ldf" && d=$(cut -d' ' -f3- <"$wdf");;
+        -r)_sd_cl_check_file "$rdf" && d=$(cut -d' ' -f2- <"$rdf");;
+        -b)d=$(for dd in "${_SD_CL_BD_LIST[@]}";do echo "$dd";done);;
+        -f)d=$(for dd in "${_SD_CL_FD_LIST[@]}";do echo "$dd";done);;
         *)
-          _sd_cl_check_file "$ldf" && _sd_cl_check_file "$pdf" && d=$(cat "$ldf")$'\n'$(cat "$pdf")$'\n'$(builtin dirs -p)
+          _sd_cl_check_file "$ldf" && _sd_cl_check_file "$pdf" && d=$(cat "$ldf")$'\n'$(cat "$pdf")$'\n'$(for dd in "${_SD_CL_BD_LIST[@]}";do echo "$dd";done)$(for dd in "${_SD_CL_BD_LIST[@]}";do echo "$dd";done)
           ;;
       esac
       COMPREPLY=($(echo "$d"|grep -- "$cur"))
@@ -601,13 +648,14 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
     complete -F _cl cl
     # }}}
     _bd () { # {{{
-      local orig_ifs=$IFS
-      local cur=${COMP_WORDS[COMP_CWORD]}
-      IFS=$'\n'
-      COMPREPLY=($( compgen -W "$(builtin dirs -p)" -- "$cur"))
-      IFS=$orig_ifs
+      COMPREPLY=($( compgen -W "${_SD_CL_BD_LIST[@]}" -- "$cur"))
     }
     complete -F _bd bd
+    # }}}
+    _fd () { # {{{
+      COMPREPLY=($( compgen -W "${_SD_CL_FD_LIST[@]}" -- "$cur"))
+    }
+    complete -F _fd fd
     # }}}
   fi
 fi
@@ -715,7 +763,7 @@ _post_cd () {
 }
 # }}}
 
-# function for cd wrap to pushd/popd {{{
+# function for cd wrap {{{
 _wrap_cd () {
   local dir="$*"
   if [ -z "$*" ];then
@@ -725,54 +773,30 @@ _wrap_cd () {
       dir="$HOME"
     fi
   elif [ "$*" = "-" ];then
-    builtin pushd >/dev/null
+    cl -b 0
     return
   else
     if [ -f "$*" ];then
       dir=$(dirname "$*")
     fi
   fi
-  builtin pushd "$dir" >/dev/null
+  _sd_cl_cd "$dir"
 }
 
 # go back/forward
 bd () {
-  if [ $# -eq 0 ];then
-    if [ "$(pwd)" != "$(_sd_cl_get_n 0 "${_SD_CL_BACK_HISTORY[@]}")" ];then
-      _SD_CL_BACK_HISTORY=("$(pwd)" "${_SD_CL_BACK_HISTORY[@]}")
-    fi
-    builtin popd >&/dev/null
+  if [ "$#" -eq 0 ];then
+    cl -b 0
   else
-    cl -b "$*"
+    cl -b "$@"
   fi
 }
 
 fd () {
-  if [ $# -eq 0 ];then
-    local n=1
+  if [ "$#" -eq 0 ];then
+    cl -f 0
   else
-    local n=$1
-  fi
-  if [ "$n" -eq 0 ];then
-    # Start from 1, as is bd
-    return 1
-  fi
-  ((n--))
-  if [ ${#_SD_CL_BACK_HISTORY[@]} -gt 0 ];then
-    local dir=$(_sd_cl_get_n "$n" "${_SD_CL_BACK_HISTORY[@]}")
-    local dirs_tmp=("${_SD_CL_BACK_HISTORY[@]}")
-    _SD_CL_BACK_HISTORY=()
-    local i=0
-    for d in "${dirs_tmp[@]}";do
-      ((i++))
-      if [ "$((i-1))" -le "$n" ];then
-        continue
-      fi
-      _SD_CL_BACK_HISTORY=("${_SD_CL_BACK_HISTORY[@]}" "$d")
-    done
-    builtin cd "$dir"
-  else
-    return 1
+    cl -f "$@"
   fi
 }
 # }}}

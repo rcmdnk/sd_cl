@@ -174,7 +174,8 @@ Commands to change the directory to the stored one.
        -p          Move to pre-defiend dirctory in ~/.config/sd_cl/predef
        -w          Move to other window's (screen/tmux) dirctory in ~/.config/sd_cl/window
        -r          Move to ranking directory in ~/.config/sd_cl/ranking
-       -b          Move back to moving histories
+       -b          Move back in moving histories
+       -f          Move forward in moving histories
        -v          Move from current directory, like Vim
        -L          Print license and quit
        -h          Print this HELP and quit
@@ -182,7 +183,7 @@ Commands to change the directory to the stored one.
 `-l`, `-c`, `-C` and `-n` (`<number>`) are used exclusively.
 
 `-p` (pre-defined directory list), `-w` (window directory list),
-`-r` (ranking directory), `-b` (moving history), or `-v` (vim mode)
+`-r` (ranking directory), `-b` (back in moving history), `-f` (forward in moving history), or `-v` (vim mode)
 change the list file.
 
 e.x.) `cl -p 3` moves to the 3rd directory stored in pre-defined directory list.
@@ -216,7 +217,7 @@ This command invokes a selection tool defined by `SD_CL_TOOL`,
 one of installed selection tools or shell interactive selection.
 (See below for more details.)
 
-If you give `-p`, `-w`, `-r`, `-b` or `-v` instead of `-c`,
+If you give `-p`, `-w`, `-r`, `-b`, `-f` or `-v` instead of `-c`,
 then each list is used for the selection instead of the last directory list.
 (see [Directory lists](#directory-lists).)
 
@@ -324,12 +325,9 @@ for `SD_CL_RANKING_METHOD=1` case or `SD_CL_RANKING_METHOD=2` case, respectively
 
 The smaller the value is set, the more the ranking is changable.
 
-#### History list (Back to the history)
+#### History list (Move Back/Forward in the history)
 
-With `cl -b`, you can go back to the directories in your cd history.
-
-This is available if `SD_CL_ISCDWRAP=1` (default),
-i.e. it uses the history of `pushd`.
+With `cl -b`/`cl -f`, you can go back/foward the directories in your cd history.
 
 #### Vim like file explorer
 
@@ -367,10 +365,10 @@ If you want to use it as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shel
 
 ## Bonus functions
 
-* bd (back directory): wrap function for to `popd >/dev/null`
-* fd (forward directory): Move forward directory in the list made by `bd`.
+* bd (back Directory): Wrap function for `cl -b`.
+* fd (Forward Directory): Wrap function for `cl -f`.
 * cdpwd : works as `cd $(pwd -P)`, i.e. resolves symbolic links in the path.
-* cd : `cd` is wrapped with `pushd`.
+* cd : `cd` is wrapped to manage history, ranking, etc...
 
 ## Options
 
@@ -448,7 +446,7 @@ in GNU screen or tmux.
 If you set `SD_CL_NOCOMPLETION` to 1, completion will be disabled.
 
 For Zsh user, if you already initialized completions with `compinit`,
-please set `export SD_CL_NOCOMPINIT=1`.
+please set `SD_CL_NOCOMPINIT=1`.
 Otherwise `sd_cl` execute:
 
 
@@ -460,8 +458,8 @@ If you don't want to wrap `cd` with `pushd`, set `SD_CL_ISCDWRAP` to 0.
 If you already have wrapper function for `cd` or the setting for `chpwd` at Zsh,
 you should be better to set:
 
-    export SD_CL_ISPOSTCD=0 # Don't do automatic save
-    export SD_CL_ISCDWRAP=0 # Don't wrap for pushd
+    SD_CL_ISPOSTCD=0 # Don't do automatic save
+    SD_CL_ISCDWRAP=0 # Don't wrap for pushd
 
 Otherwise `sd_cl` overwrites these functions.
 
@@ -488,4 +486,5 @@ with `wrap_cd "$@"`.
 
 ## References
 
+* [sd_cl: pecoやfzfなどにも対応したディレクトリ移動効率化ツール](https://rcmdnk.com/blog/2018/08/18/computer-shell/)
 * [ターミナルでのディレクトリ移動を保存、取り出しする](http://rcmdnk.github.io/blog/2013/12/27/computer-bash-zsh-sd-cl/)

@@ -305,7 +305,7 @@ cl () {
     if [ -n "$file" ];then
       : > "$file"
     elif [ "$mode" = "back" ];then
-      dirs -c
+      builtin dirs -c
     fi
     return
   fi
@@ -345,7 +345,7 @@ cl () {
       # Get variables
       local orig_ifs=$IFS
       IFS=$'\n'
-      dirs=($(dirs -p))
+      dirs=($(builtin dirs -p))
       IFS=$orig_ifs
     }
   fi
@@ -463,8 +463,8 @@ cl () {
 
   if [ "$mode" = back ];then
     local i
-    i=$(dirs -p -v|grep -- " $dir$"|head -n1|awk '{print $1}')
-    command pushd +"${i}" >/dev/null
+    i=$(builtin dirs -p -v|grep -- " $dir$"|head -n1|awk '{print $1}')
+    builtin  pushd +"${i}" >/dev/null
     return
   fi
 
@@ -527,7 +527,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         _sd_cl_check_file "$pdf"
         compadd $(cat "$ldf")
         compadd $(cat "$pdf")
-        compadd $(dirs -p)
+        compadd $(builtin dirs -p)
       elif [ -n "$ldf" ];then
         if echo "$state"|grep -q window;then
           compadd $(cat $ldf|cut -d' ' -f 3-)
@@ -537,7 +537,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
           compadd $(cat $ldf)
         fi
       else
-        compadd $(dirs -p)
+        compadd $(builtin dirs -p)
       fi
       IFS=$orig_ifs
     }
@@ -547,7 +547,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       typeset -A opt_args
       local orig_ifs=$IFS
       IFS=$'\n'
-      compadd "$(dirs -p)"
+      compadd "$(builtin dirs -p)"
       IFS=$orig_ifs
     }
     compdef _bd bd
@@ -600,9 +600,9 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         -p)_sd_cl_check_file "$pdf" && d=$(cat "$pdf");;
         -w)_sd_cl_check_file "$ldf" && d=$(cat "$wdf"|cut -d' ' -f3-);;
         -r)_sd_cl_check_file "$rdf" && d=$(cat "$rdf"|cut -d' ' -f2-);;
-        -b)d=$(dirs -p);;
+        -b)d=$(builtin dirs -p);;
         *)
-          _sd_cl_check_file "$ldf" && _sd_cl_check_file "$pdf" && d=$(cat "$ldf")$'\n'$(cat "$pdf")$'\n'$(dirs -p)
+          _sd_cl_check_file "$ldf" && _sd_cl_check_file "$pdf" && d=$(cat "$ldf")$'\n'$(cat "$pdf")$'\n'$(builtin dirs -p)
           ;;
       esac
       COMPREPLY=($(echo "$d"|grep -- "$cur"))
@@ -614,7 +614,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       local orig_ifs=$IFS
       local cur=${COMP_WORDS[COMP_CWORD]}
       IFS=$'\n'
-      COMPREPLY=($( compgen -W "$(dirs -p)" -- "$cur"))
+      COMPREPLY=($( compgen -W "$(builtin dirs -p)" -- "$cur"))
       IFS=$orig_ifs
     }
     complete -F _bd bd
@@ -735,21 +735,21 @@ _wrap_cd () {
       dir="$HOME"
     fi
   elif [ "$*" = "-" ];then
-    pushd >/dev/null
+    builtin pushd >/dev/null
     return
   else
     if [ -f "$*" ];then
       dir=$(dirname "$*")
     fi
   fi
-  pushd "$dir" >/dev/null
+  builtin pushd "$dir" >/dev/null
 }
 
 # go back/forward
 bd () {
   if [ $# -eq 0 ];then
     _SD_CL_BACK_HISTORY=("$(pwd)" "${_SD_CL_BACK_HISTORY[@]}")
-    popd >&/dev/null
+    builtin popd >&/dev/null
   else
     cl -b "$*"
   fi

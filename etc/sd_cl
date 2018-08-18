@@ -783,13 +783,13 @@ fd () {
     _SD_CL_BACK_HISTORY=()
     local i=0
     for d in "${dirs_tmp[@]}";do
-      if [ "$i" -le "$n" ];then
+      ((i++))
+      if [ "$((i-1))" -le "$n" ];then
         continue
       fi
-      ((i++))
       _SD_CL_BACK_HISTORY=("${_SD_CL_BACK_HISTORY[@]}" "$d")
     done
-    cd "$dir"
+    builtin cd "$dir"
   else
     return 1
   fi

@@ -144,7 +144,7 @@ sd () {
       "-C" ) cleardir=1;;
       "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
-        echo "$help"|${PAGER:-less} >/dev/tty
+        echo "$help"
         return
         ;;
       "--" ) shift; dir="$*"; break;;
@@ -253,7 +253,7 @@ cl () {
       "-C" ) cleardir=1;;
       "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
-        echo "$help"|${PAGER:-less}
+        echo "$help"
         return
         ;;
       "--" ) shift; dir="$*"; break;;

@@ -135,6 +135,15 @@ _sd_cl_reset_ksharray () {
   fi
 }
 
+_sd_cl_get_n () {
+  local n=$1
+  if [ -n "$n" ];then
+    shift
+    ((n++))
+    eval echo \$${n}
+  fi
+}
+
 # }}}
 
 # main functions {{{
@@ -402,11 +411,11 @@ cl () {
       echo "Enter [0-$((${#dirs[@]}-1))]"
       return $_SD_CL_ERROR_INVALID_N
     fi
-    dirs=("${dirs[$n]}")
+    dirs=("$(_sd_cl_get_n "$n" "${dirs[@]}")")
   fi
 
   if [ "${#dirs[@]}" -eq 1 ] &&  [ "$mode" != vim ];then
-    dir="${dirs[0]}"
+    dir="$(_sd_cl_get_n 0 "${dirs[@]}")"
   else
     # Set selection tool
     local selection=""
@@ -432,7 +441,7 @@ cl () {
         local d
         local i=$((${#dirs[@]}-1))
         while [ $i -ge 0 ];do
-          printf "%3d: %s\\n" $i "${dirs[$i]}"
+          printf "%3d: %s\\n" $i "$(_sd_cl_get_n $i "${dirs[@]}")"
           ((i--))
         done
         printf "\\nChoose directory number: "
@@ -445,7 +454,7 @@ cl () {
           echo "Enter [0-$((${#dirs[@]}-1))]"
           return $_SD_CL_ERROR_INVALID_INPUT
         fi
-        dir=${dirs[$i]}
+        dir="$(_sd_cl_get_n "$i" "${dirs[@]}")"
       fi
       if [ -z "$dir" ];then
         return
@@ -464,7 +473,7 @@ cl () {
   if [ "$mode" = back ];then
     local i
     i=$(builtin dirs -p -v|grep -- " $dir$"|head -n1|awk '{print $1}')
-    builtin  pushd +"${i}" >/dev/null
+    builtin pushd +"${i}" >/dev/null
     return
   fi
 
@@ -748,7 +757,9 @@ _wrap_cd () {
 # go back/forward
 bd () {
   if [ $# -eq 0 ];then
-    _SD_CL_BACK_HISTORY=("$(pwd)" "${_SD_CL_BACK_HISTORY[@]}")
+    if [ "$(pwd)" != "$(_sd_cl_get_n 0 "${_SD_CL_BACK_HISTORY[@]}")" ];then
+      _SD_CL_BACK_HISTORY=("$(pwd)" "${_SD_CL_BACK_HISTORY[@]}")
+    fi
     builtin popd >&/dev/null
   else
     cl -b "$*"
@@ -756,10 +767,28 @@ bd () {
 }
 
 fd () {
+  if [ $# -eq 0 ];then
+    local n=1
+  else
+    local n=$1
+  fi
+  if [ "$n" -eq 0 ];then
+    # Start from 1, as is bd
+    return 1
+  fi
+  ((n--))
   if [ ${#_SD_CL_BACK_HISTORY[@]} -gt 0 ];then
-    local dir=${_SD_CL_BACK_HISTORY[0]}
-    unset _SD_CL_BACK_HISTORY[0]
-    _SD_CL_BACK_HISTORY=("${_SD_CL_BACK_HISTORY[@]}")
+    local dir=$(_sd_cl_get_n "$n" "${_SD_CL_BACK_HISTORY[@]}")
+    local dirs_tmp=("${_SD_CL_BACK_HISTORY[@]}")
+    _SD_CL_BACK_HISTORY=()
+    local i=0
+    for d in "${dirs_tmp[@]}";do
+      if [ "$i" -le "$n" ];then
+        continue
+      fi
+      ((i++))
+      _SD_CL_BACK_HISTORY=("${_SD_CL_BACK_HISTORY[@]}" "$d")
+    done
     cd "$dir"
   else
     return 1

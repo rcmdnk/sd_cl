@@ -75,7 +75,7 @@ _SD_CL_BACK_HISTORY=()
 # support functions {{{
 _sd_cl_cd () {
   _SD_CL_BACK_HISTORY=()
-  eval command cd "$1"
+  eval builtin cd "$1"
 }
 
 _sd_cl_check_file () {
@@ -781,6 +781,6 @@ fi
 
 # Move to actual pwd {{{
 cdpwd () {
-  eval command cd "$(pwd -P)"
+  _sd_cl_cd "$(pwd -P)"
 }
 # }}}

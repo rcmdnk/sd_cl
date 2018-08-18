@@ -664,7 +664,7 @@ fi
 # }}}
 
 # Zsh keybind {{{
-if [ -n "$ZSH_VERSION" ] && [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
+if [ -n "$ZSH_VERSION" ];then
   _zsh_bd () {
     bd >/dev/null
     zle reset-prompt
@@ -681,9 +681,11 @@ if [ -n "$ZSH_VERSION" ] && [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
   zle -N fd _zsh_fd
   zle -N up _zsh_up
 
-  bindkey '^[o' bd
-  bindkey '^[i' fd
-  bindkey '^[u' up
+  if [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
+    bindkey '^[o' bd
+    bindkey '^[i' fd
+    bindkey '^[u' up
+  fi
 fi
 # }}}
 

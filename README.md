@@ -72,14 +72,16 @@ bd/fd commands
 ![bd/fd](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_bdfd.gif)
 
 Use keybindings at Bash
+
 ![bd/fd bash](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_bdfd_bash.gif)
 
-Note: Gif shows keys of {% key symbol opt %} (opt in Mac), but it is same as Cmd/Alt (iTerm's setting).
+Note: Gif shows keys of Opt in Mac, but it is same as Cmd/Alt (iTerm's setting).
 
 Use keybindings at Zsh
+
 ![bd/fd zsh](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_bdfd_zsh.gif)
 
-Note: Gif shows keys of {% key symbol opt %} (opt in Mac), but it is same as Cmd/Alt (iTerm's setting).
+Note: Gif shows keys of Opt in Mac, but it is same as Cmd/Alt (iTerm's setting).
 
 * [Vim like file explorer](#vim-like-file-explorer)
 
@@ -393,13 +395,24 @@ In addition, `Meta`(`Alt`)-`u` is bounden to `up` (move up one directory).
 
 set `SD_CL_ZSH_BIND=0` to disable these binds.
 
+If you want to assign different keys, set `SD_CL_ZSH_BIND=0` and then add
+bindings in **.zshrc** something like:
+
+    SD_CL_ZSH_BIND=0
+
+    source /path/to/sd_cl
+
+    bindkey '^[a' bd
+    bindkey '^[b' fd
+    bindkey '^[c' up
+
 For Bash, add following lines in **~/.inputrc** to get similar keybindings:
 
 ```bash
 # move
 "\eo": "bd\C-m"
 "\ei": "fd\C-m"
-"\eu": "cd ../\C-m"
+"\eu": "up\C-m"
 ```
 
 

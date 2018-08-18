@@ -67,8 +67,17 @@ SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
 SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 # }}}
 
+# Other variables {{{
+_SD_CL_BACK_HISTORY=()
+# }}}
+
 
 # support functions {{{
+_sd_cl_cd () {
+  _SD_CL_BACK_HISTORY=()
+  eval command cd "$1"
+}
+
 _sd_cl_check_file () {
   mkdir -p "$(dirname "${1}")"
   touch "$1"
@@ -190,7 +199,7 @@ cl () {
     _sd_cl_check_file "$file"
     local ld="$(head -n1 "${SD_CL_LASTDIR_FILE}")"
     if [ "$ld" != "" ];then
-      eval command cd "$ld" # eval to expand ~
+      _sd_cl_cd "$ld"
       return
     else
       echo "There is no saved directory."
@@ -418,7 +427,7 @@ cl () {
       fi
 
       if [ "$mode" = vim ];then
-        eval command cd "${dir}"
+        _sd_cl_cd "$dir"
         dirs=()
         _cl_get_dirs
       else
@@ -442,7 +451,7 @@ cl () {
     fi
   fi
 
-  eval command cd "${dir}"
+  _sd_cl_cd "$dir"
 } # }}}
 
 # Completion {{{
@@ -711,13 +720,24 @@ _wrap_cd () {
   pushd "$dir" >/dev/null
 }
 
-# wrap function for popd
+# go back/forward
 bd () {
   if [ $# -eq 0 ];then
-    # 0 is current directory
-    cl -b 1
+    _SD_CL_BACK_HISTORY=("$(pwd)" "${_SD_CL_BACK_HISTORY[@]}")
+    popd >&/dev/null
   else
     cl -b "$*"
+  fi
+}
+
+fd () {
+  if [ ${#_SD_CL_BACK_HISTORY[@]} -gt 0 ];then
+    local dir=${_SD_CL_BACK_HISTORY[0]}
+    unset _SD_CL_BACK_HISTORY[0]
+    _SD_CL_BACK_HISTORY=("${_SD_CL_BACK_HISTORY[@]}")
+    cd "$dir"
+  else
+    return 1
   fi
 }
 # }}}
@@ -763,6 +783,6 @@ fi
 
 # Move to actual pwd {{{
 cdpwd () {
-  command cd "$(pwd -P)"
+  eval command cd "$(pwd -P)"
 }
 # }}}

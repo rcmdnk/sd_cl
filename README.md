@@ -368,8 +368,9 @@ If you want to use it as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shel
 ## Bonus functions
 
 * bd (back directory): wrap function for to `popd >/dev/null`
+* fd (forward directory): Move forward directory in the list made by `bd`.
 * cdpwd : works as `cd $(pwd -P)`, i.e. resolves symbolic links in the path.
-* cd : `cd` is wrapped with `pushd`. Useful to use with `bd`.
+* cd : `cd` is wrapped with `pushd`.
 
 ## Options
 

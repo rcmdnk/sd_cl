@@ -116,25 +116,6 @@ _sd_cl_check_dir () {
   fi
 }
 
-_sd_cl_set_ksharray () {
-  if [ -n "$ZSH_VERSION" ];then
-    if ! setopt|grep -q ksharrays;then
-      _SD_CL_KSHARRAY=1
-      setopt ksharrays
-    else
-      _SD_CL_KSHARRAY=0
-    fi
-  fi
-}
-
-_sd_cl_reset_ksharray () {
-  if [ -n "$ZSH_VERSION" ];then
-    if [ $_SD_CL_KSHARRAY -eq 1 ];then
-      unsetopt ksharrays
-    fi
-  fi
-}
-
 _sd_cl_get_n () {
   local n=$1
   if [ -n "$n" ];then

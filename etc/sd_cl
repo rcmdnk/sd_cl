@@ -664,7 +664,7 @@ fi
 # }}}
 
 # Zsh keybind {{{
-if [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
+if [ -n "$ZSH_VERSION" ] && [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
   _zsh_bd () {
     echo bd
     bd

@@ -370,6 +370,21 @@ If you want to use it as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shel
 * cdpwd : works as `cd $(pwd -P)`, i.e. resolves symbolic links in the path.
 * cd : `cd` is wrapped to manage history, ranking, etc...
 
+If you don't want to wrap `cd`, set `SD_CL_ISCDWRAP=0`.
+
+For Zsh, `Meta`(`Alt`)-`o` and `Meta`(`Alt`)-`i`
+are bounden to `bd` and `fd`, respectively.
+(set `SD_CL_ZSH_BIND=0` to disable binds.)
+
+For Bash, add following lines in **~/.inputrc** to get similar keybindings:
+
+```bash
+# move
+"\eo": "bd\C-m"
+"\ei": "fd\C-m"
+```
+
+
 ## Options
 
 Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.

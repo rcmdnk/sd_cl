@@ -673,11 +673,17 @@ if [ -n "$ZSH_VERSION" ] && [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
     fd >/dev/null
     zle reset-prompt
   }
+  _zsh_up () {
+    cd ../ >/dev/null
+    zle reset-prompt
+  }
   zle -N bd _zsh_bd
   zle -N fd _zsh_fd
+  zle -N up _zsh_up
 
   bindkey '^[o' bd
   bindkey '^[i' fd
+  bindkey '^[u' up
 fi
 # }}}
 

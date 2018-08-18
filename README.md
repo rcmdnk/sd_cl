@@ -21,16 +21,18 @@ Make change directory easy and save your time.
 * [Usage](#usage)
    * [Main functions: sd/cl](#main-functions-sdcl)
    * [Use selection mode to select from the list](#use-selection-mode-to-select-from-the-list)
+   * [Filtering](#filtering)
+   * [Tab completion](#tab-completion)
+   * [Jump to N-th directory](#jump-to-n-th-directory)
    * [Directory lists](#directory-lists)
       * [Last directory list](#last-directory-list)
       * [Pre-defined directory list](#pre-defined-directory-list)
       * [Window directory list](#window-directory-list)
       * [Ranking directory list](#ranking-directory-list)
-      * [History list (Back to the history)](#history-list-back-to-the-history)
+      * [History list (Move Back/Forward in the history)](#history-list-move-backforward-in-the-history)
       * [Vim like file explorer](#vim-like-file-explorer)
-   * [Tab completion](#tab-completion)
 * [Selection tool](#selection-tool)
-* [Bonus alias/functions](#bonus-aliasfunctions)
+* [Bonus functions](#bonus-functions)
 * [Options](#options)
 * [References](#references)
 
@@ -63,9 +65,21 @@ Make change directory easy and save your time.
 
 ![ranking list](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_ranking.gif)
 
-* [History list (Back to the history)](#history-list-back-to-the-history)
+* [History list (Move Back/Forward in the history)](#history-list-move-backforward-in-the-history)
 
-![back to the history](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_back.gif)
+bd/fd commands
+
+![bd/fd](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_bdfd.gif)
+
+Use keybindings at Bash
+![bd/fd bash](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_bdfd_bash.gif)
+
+Note: Gif shows keys of {% key symbol opt %} (opt in Mac), but it is same as Cmd/Alt (iTerm's setting).
+
+Use keybindings at Zsh
+![bd/fd zsh](https://raw.githubusercontent.com/rcmdnk/sd_cl/fig/fig/sd_cl_bdfd_zsh.gif)
+
+Note: Gif shows keys of {% key symbol opt %} (opt in Mac), but it is same as Cmd/Alt (iTerm's setting).
 
 * [Vim like file explorer](#vim-like-file-explorer)
 
@@ -374,7 +388,9 @@ If you don't want to wrap `cd`, set `SD_CL_ISCDWRAP=0`.
 
 For Zsh, `Meta`(`Alt`)-`o` and `Meta`(`Alt`)-`i`
 are bounden to `bd` and `fd`, respectively.
-(set `SD_CL_ZSH_BIND=0` to disable binds.)
+In addition, `Meta`(`Alt`)-`u` is bounden to move up one directory.
+
+set `SD_CL_ZSH_BIND=0` to disable these binds.
 
 For Bash, add following lines in **~/.inputrc** to get similar keybindings:
 
@@ -382,6 +398,7 @@ For Bash, add following lines in **~/.inputrc** to get similar keybindings:
 # move
 "\eo": "bd\C-m"
 "\ei": "fd\C-m"
+"\eu": "cd ../\C-m"
 ```
 
 

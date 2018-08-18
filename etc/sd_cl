@@ -666,13 +666,11 @@ fi
 # Zsh keybind {{{
 if [ -n "$ZSH_VERSION" ] && [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
   _zsh_bd () {
-    echo bd
-    bd
+    bd >/dev/null
     zle reset-prompt
   }
   _zsh_fd () {
-    echo fd
-    fd
+    fd >/dev/null
     zle reset-prompt
   }
   zle -N bd _zsh_bd

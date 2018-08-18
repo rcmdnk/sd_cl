@@ -170,7 +170,7 @@ sd () {
   fi
 
   # Set Save Dir
-  if [ "$dir" = "" ];then
+  if [ -z "$dir" ];then
     # Current directory
     dir=$(_sd_cl_get_dir)
   fi
@@ -196,7 +196,7 @@ cl () {
   if [ $# -eq 0 ];then
     _sd_cl_check_file "$file"
     local ld="$(head -n1 "${SD_CL_LASTDIR_FILE}")"
-    if [ "$ld" != "" ];then
+    if [ -n "$ld" ];then
       _sd_cl_cd "$ld"
       return
     else
@@ -275,7 +275,7 @@ cl () {
 
   # Clear
   if [ "$cleardir" -eq 1 ];then
-    if [ "$file" != "" ];then
+    if [ -n "$file" ];then
       : > "$file"
     elif [ "$mode" = "back" ];then
       dirs -c
@@ -352,7 +352,7 @@ cl () {
         d=$(echo "$d"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
       fi
     fi
-    if [ "$dir" != "" ];then
+    if [ -n "$dir" ];then
       if ! eval echo "$d" |eval grep -q -- "$dir";then
         continue
       fi
@@ -369,7 +369,7 @@ cl () {
     dirs=("${dirs[@]}" "$d")
   done
 
-  if [ "$n" != "" ];then
+  if [ -n "$n" ];then
     if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "${#dirs[@]}" ];then
       echo "$n is not valid number."
       echo "Enter [0-$((${#dirs[@]}-1))]"
@@ -454,7 +454,7 @@ cl () {
 
 # Completion {{{
 if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
-  if [ "$ZSH_VERSION" != "" ];then
+  if [ -n "$ZSH_VERSION" ];then
     if [ "$SD_CL_NOCOMPINIT" -eq 0 ];then
       autoload -Uz compinit
       compinit
@@ -501,7 +501,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         compadd $(cat "$ldf")
         compadd $(cat "$pdf")
         compadd $(dirs -p)
-      elif [ "$ldf" != "" ];then
+      elif [ -n "$ldf" ];then
         if echo "$state"|grep -q window;then
           compadd $(cat $ldf|cut -d' ' -f 3-)
         elif echo "$state"|grep -q ranking;then
@@ -525,7 +525,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
     }
     compdef _bd bd
     # }}}
-  elif [ "$BASH_VERSION" != "" ];then
+  elif [ -n "$BASH_VERSION" ];then
     _cl () { # {{{
       COMPREPLY=()
       local cur=${COMP_WORDS[COMP_CWORD]}
@@ -537,7 +537,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       local nocomp=0
       local i
       for i in $(seq 1 $((COMP_CWORD)));do
-        if [ "${COMP_WORDS[$i]}" = "" ] || [ "${COMP_WORDS[$i]}" = "-" ];then
+        if [ -z "${COMP_WORDS[$i]}" ] || [ "${COMP_WORDS[$i]}" = "-" ];then
           continue
         fi
         if echo "${opts[@]}"|grep -q -- "${COMP_WORDS[$i]}";then
@@ -551,7 +551,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       if [[ "$cur" == -* ]];then
         COMPREPLY=($( compgen -W "${opts[*]}" -- "$cur"))
         return
-      elif [ "${COMP_WORDS[$i]}" != "" ] && echo "${opts[@]}"|grep -q -- "$cur";then
+      elif [ -n "${COMP_WORDS[$i]}" ] && echo "${opts[@]}"|grep -q -- "$cur";then
         COMPREPLY=("$cur")
         return
       elif [ $nocomp -eq 1 ];then
@@ -626,7 +626,7 @@ _sd_cl_ranking_update () {
 }
 
 _sd_cl_ranking () {
-  if [ "$SD_CL_RANKING_EXCLUDE" != "" ];then
+  if [ -n "$SD_CL_RANKING_EXCLUDE" ];then
     local orig_ifs=$IFS
     IFS=","
     local exclude=($(echo "$SD_CL_RANKING_EXCLUDE"))
@@ -701,7 +701,7 @@ _post_cd () {
 # function for cd wrap to pushd/popd {{{
 _wrap_cd () {
   local dir="$*"
-  if [ "$*" = "" ];then
+  if [ -z "$*" ];then
     if [ "$(pwd)" = "$HOME" ];then
       return
     else
@@ -741,7 +741,7 @@ fd () {
 # }}}
 
 # Set cd/chpwd {{{
-if [ "$ZSH_VERSION" != "" ];then
+if [ -n "$ZSH_VERSION" ];then
   if [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     chpwd () {
       _post_cd

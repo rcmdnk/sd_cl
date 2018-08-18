@@ -674,7 +674,7 @@ if [ -n "$ZSH_VERSION" ] && [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
     zle reset-prompt
   }
   _zsh_up () {
-    cd ../ >/dev/null
+    up >/dev/null
     zle reset-prompt
   }
   zle -N bd _zsh_bd
@@ -824,6 +824,10 @@ fd () {
   else
     cl -f "$@"
   fi
+}
+
+up () {
+  cd ../
 }
 # }}}
 

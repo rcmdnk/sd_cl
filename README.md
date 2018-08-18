@@ -381,6 +381,7 @@ If you want to use it as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shel
 
 * bd (back Directory): Wrap function for `cl -b`.
 * fd (Forward Directory): Wrap function for `cl -f`.
+* up : Move up one directory.
 * cdpwd : works as `cd $(pwd -P)`, i.e. resolves symbolic links in the path.
 * cd : `cd` is wrapped to manage history, ranking, etc...
 
@@ -388,7 +389,7 @@ If you don't want to wrap `cd`, set `SD_CL_ISCDWRAP=0`.
 
 For Zsh, `Meta`(`Alt`)-`o` and `Meta`(`Alt`)-`i`
 are bounden to `bd` and `fd`, respectively.
-In addition, `Meta`(`Alt`)-`u` is bounden to move up one directory.
+In addition, `Meta`(`Alt`)-`u` is bounden to `up` (move up one directory).
 
 set `SD_CL_ZSH_BIND=0` to disable these binds.
 

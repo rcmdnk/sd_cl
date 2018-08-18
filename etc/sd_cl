@@ -141,8 +141,6 @@ sd () {
       "-e" ) edit=1;;
       "-c" ) file=${SD_CL_LASTDIR_FILE};;
       "-p" ) file=${SD_CL_PREDEF_FILE};;
-      "-w" ) file=${SD_CL_WINDOW_FILE};;
-      "-r" ) file=${SD_CL_RANKING_FILE};;
       "-C" ) cleardir=1;;
       "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
@@ -402,7 +400,7 @@ cl () {
 
     while :;do
       if [ -n "$selection" ];then
-        dir=$(for d in "${dirs[@]}";do echo "$d";done|$selection)
+        dir=$(for d in "${dirs[@]}";do echo "$d";done|eval "$selection")
       else
         local d
         local i=$((${#dirs[@]}-1))

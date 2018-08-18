@@ -149,8 +149,6 @@ Commands to manage stored directories.
        -C          Clear directories
        -c          Use the last directory file (~/.config/sd_cl/lastdir)
        -p          Use the pre-defiend dirctory file (~/.config/sd_cl/predef)
-       -w          Use the window dirctory file (~/.config/sd_cl/window)
-       -r          Use the ranking directory file (~/.config/sd_cl/ranking)
        -L          Print license and quit
        -h          Print this HELP and quit
 

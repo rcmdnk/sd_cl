@@ -25,11 +25,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
 
 # Fixed Parameters {{{
 _SD_CL_ERROR_INVALID_ARGUMENT=100
-_SD_CL_ERROR_NO_SUCH_DIRECTORY=10
-_SD_CL_ERROR_NO_SAVED_DIRECTORY=11
-_SD_CL_ERROR_NOT_STORED=12
-_SD_CL_ERROR_INVALID_N=13
-_SD_CL_ERROR_INVALID_INPUT=14
+_SD_CL_ERROR_IS_A_FILE=10
+_SD_CL_ERROR_NO_SUCH_DIRECTORY=11
+_SD_CL_ERROR_NO_SAVED_DIRECTORY=12
+_SD_CL_ERROR_NOT_STORED=13
+_SD_CL_ERROR_INVALID_N=14
+_SD_CL_ERROR_INVALID_INPUT=15
 # }}}
 
 # Parameters {{{
@@ -105,8 +106,16 @@ _sd_cl_get_dir () {
 }
 
 _sd_cl_check_dir () {
-  eval test -d "$1"
+  eval test -d "$1" && return
+  if eval test -f "$1";then
+    echo "$1 is a file"
+    return $_SD_CL_ERROR_IS_A_FILE
+  else
+    echo "$1: No such a directory"
+    return $_SD_CL_ERROR_NO_SUCH_DIRECTORY
+  fi
 }
+
 # }}}
 
 # main functions {{{
@@ -176,8 +185,7 @@ sd () {
   fi
 
   if ! _sd_cl_check_dir "$dir";then
-    echo "$dir: No such a directory"
-    return $_SD_CL_ERROR_NO_SUCH_DIRECTORY
+    return $?
   else
     _sd_cl_check_file "$file"
     local pre_list="$(grep -v "^${dir}$" < "$file"|grep -v '^\s*$'|head -n"$((SD_CL_N-1))")"

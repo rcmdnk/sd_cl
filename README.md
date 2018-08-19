@@ -413,9 +413,9 @@ For Bash, add following lines in **~/.inputrc** to get similar keybindings:
 
 ```bash
 # move
-"\eo": "bd\C-m"
-"\ei": "fd\C-m"
-"\eu": "up\C-m"
+"\eo": "\C-ubd\C-m"
+"\ei": "\C-ufd\C-m"
+"\eu": "\C-uup\C-m"
 ```
 
 

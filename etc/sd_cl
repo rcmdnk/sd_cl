@@ -319,16 +319,60 @@ cl () {
     if [ "$mode" = ranking ];then
       _sd_cl_ranking_update
     fi
-    _cl_get_dirs () {
-      local i=0
-      local d
-      _sd_cl_check_file "$file"
-      while read -r d;do
-        dirs=("${dirs[@]}" "$d")
-      done < "$file"
-    }
+    if [ "$mode" = window ] && [ -n "$STY" ];then
+      _cl_get_dirs () {
+        _sd_cl_check_file "$file"
+        dirs=()
+        local windows=$(screen -Q windows)
+        local wininfo
+        local i=0
+        local d
+        for wininfo in $windows;do
+          if [ $i -eq 0 ];then
+            d=$(grep "^$(echo "${wininfo%\*}"|sed 's/-//') " "$file")
+            if [ -n "$d" ];then
+              dirs=("${dirs[@]}" "$d")
+            fi
+          fi
+          ((i++))
+          if [ $i -eq 3 ];then
+            i=0
+          fi
+        done
+        for d in "${dirs[@]}";do
+          echo "$d"
+        done > "$file"
+      }
+    elif [ "$mode" = window ] && [ -n "$TMUX" ];then
+      _cl_get_dirs () {
+        _sd_cl_check_file "$file"
+        local windows=$(tmux lsp -s -F '#I.#P')
+        local wininfo
+        local i=0
+        local d
+        for wininfo in $windows;do
+          d=$(grep "^${wininfo/,/ } " "$file")
+          if [ -n "$d" ];then
+            dirs=("${dirs[@]}" "$d")
+          fi
+        done
+        for d in "${dirs[@]}";do
+          echo "$d"
+        done > "$file"
+      }
+    else
+      _cl_get_dirs () {
+        dirs=()
+        local d
+        _sd_cl_check_file "$file"
+        while read -r d;do
+          dirs=("${dirs[@]}" "$d")
+        done < "$file"
+      }
+    fi
   elif [ "$mode" = vim ];then
     _cl_get_dirs () {
+      dirs=()
       for d in *;do
         if [ ! -d "$d" ];then
           continue
@@ -450,7 +494,6 @@ cl () {
 
       if [ "$mode" = vim ];then
         _sd_cl_cd "$dir"
-        dirs=()
         _cl_get_dirs
       else
         break

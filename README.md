@@ -450,6 +450,9 @@ Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
     SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
     SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
 
+    # ZSH keybind
+    SD_CL_ZSH_KEYBIND=1
+
     # cd wrap to pushd/popd
     SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 
@@ -495,9 +498,11 @@ For Zsh user, if you already initialized completions with `compinit`,
 please set `SD_CL_NOCOMPINIT=1`.
 Otherwise `sd_cl` execute:
 
-
     autoload -Uz compinit
     compinit
+
+For Zsh user, if you don't want to bind keys to bd/fd/up,
+set `SD_CL_ZSH_KEYBIND=0`.
 
 If you don't want to wrap `cd` with `pushd`, set `SD_CL_ISCDWRAP` to 0.
 
@@ -505,7 +510,7 @@ If you already have wrapper function for `cd` or the setting for `chpwd` at Zsh,
 you should be better to set:
 
     SD_CL_ISPOSTCD=0 # Don't do automatic save
-    SD_CL_ISCDWRAP=0 # Don't wrap for pushd
+    SD_CL_ISCDWRAP=0 # Don't wrap cd
 
 Otherwise `sd_cl` overwrites these functions.
 

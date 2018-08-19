@@ -183,7 +183,7 @@ Commands to change the directory to the stored one.
     Arguments:
        -l          Show saved directories
        -e          Edit directory list file
-       -c          Show saved directories and choose a directory in ~/.config/sd_cl/lastdir
+       -c          Show saved directories and choose a directory
        -C          Clear directories
        <number>    Move to <number>-th last directory
        -n <number> Move to <number>-th last directory
@@ -193,6 +193,7 @@ Commands to change the directory to the stored one.
        -b          Move back in moving histories
        -f          Move forward in moving histories
        -v          Move from current directory, like Vim
+       -s <tool>   Set selection tool (multi tools can be set by comma separated array, default=sentaku,peco,percol,fzf,fzy,selecta,gof,picka)
        -L          Print license and quit
        -h          Print this HELP and quit
 
@@ -368,16 +369,18 @@ Following tools are searched for and one of which is used if exists.
 * [mattn/gof](https://github.com/mattn/gof)
 * [mptre/pick: A fuzzy search tool for the command-line](https://github.com/mptre/pick)
 
-You can decide top priority selection tool as you like by setting `SD_CL_TOOL`, like
+You can decide a selection tool as you like by setting `SD_CL_TOOL`, like
 
-    SD_CL_TOOL=peco
+    SD_CL_TOOL=sentaku,peco,percol,fzf,fzy,selecta,gof,picka
 
 in your **.bashrc** or **.zshrc**.
+
+One or more tools can be set by comma separated array.
 
 If any of tools is not available,
 simple shell selection tool is launched.
 
-If you want to use it as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shell`.
+If you want to use simple shell selection as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shell` (or SD_CL_TOOL="").
 
 ## Bonus functions
 

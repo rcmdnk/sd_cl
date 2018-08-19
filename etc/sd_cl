@@ -35,7 +35,7 @@ _SD_CL_ERROR_INVALID_INPUT=15
 
 # Parameters {{{
 # Selection tool
-SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
+SD_CL_TOOL=${SD_CL_TOOL:-sentaku,peco,percol,fzf,fzy,selecta,gof,picka}
 
 # Number of kept last directories (for SD_CL_LASTDIR_FILE)
 SD_CL_N=${SD_CL_N:-20}
@@ -247,6 +247,7 @@ cl () {
      -b          Move back in moving histories
      -f          Move forward in moving histories
      -v          Move from current directory, like Vim
+     -s <tool>   Set selection tool (multi tools can be set by comma separated array, default=$SD_CL_TOOL)
      -L          Print license and quit
      -h          Print this HELP and quit
 "
@@ -259,6 +260,7 @@ cl () {
   local n=""
   local dir=""
   local dirs=()
+  local selection_tools="$SD_CL_TOOL"
 
   # Get arguments
   while [ $# -gt 0 ];do
@@ -274,6 +276,7 @@ cl () {
       "-b" ) file="";mode="back";;
       "-f" ) file="";mode="forward";;
       "-C" ) cleardir=1;;
+      "-s" ) selection_tools="$2"; shift;;
       "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
         echo "$help"
@@ -451,17 +454,19 @@ cl () {
   else
     # Set selection tool
     local selection=""
-    if type "$SD_CL_TOOL" >& /dev/null ;then
-      selection=$SD_CL_TOOL
-    elif [ "$SD_CL_TOOL" != "NONE" ] && [ "$SD_CL_TOOL" != "shell" ];then
-      local tool
-      for tool in sentaku peco percol fzf fzy selecta gof pick;do
-        if type $tool >& /dev/null ;then
-          selection=$tool
-          break
-        fi
-      done
-    fi
+    local s
+    for s in ${selection_tools//,/ };do
+      if [ -z "$s" ];then
+        continue
+      fi
+      if [ "$s" = "NONE" ] || [ "$s" = "shell" ];then
+        break
+      fi
+      if type "$s" >& /dev/null ;then
+        selection=$s
+        break
+      fi
+    done
     if [ "$selection" = "sentaku" ];then
       selection="sentaku -s line"
     fi

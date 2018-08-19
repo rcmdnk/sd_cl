@@ -538,7 +538,119 @@ replace your `builtin(command) cd` command with
 i.e., if you want to enable both in Bash, you should replace above `builtin cd "$@"`
 with `wrap_cd "$@"`.
 
+## Other similar tools
+
+* `pushd`/`popd`/`dirs`
+
+Builtin commands of the shell.
+
+`pushd <dir>` stores current directory and then move to given one.
+
+`popd` takes out the directory from the list and move to there.
+
+`dirs` shows the list.
+
+Their functions are very useful and they are always available.
+
+But they are not used so much because (I think) `p` `u` `s` `h` `d` are too many to put
+as frequent commands like `cd`.
+
+A lot of attempts to make wrapper functions for these commands can be found.
+
+The simplest one is something like:
+
+{% codeblock .bashrc lang:bash %}
+alias cd="pushd"
+alias bd="popd"
+{% endcodeblock %}
+
+* [cdhist.sh](http://www.unixuser.org/~euske/doc/bashtips/cdhist.sh)
+
+> [Bash の小枝集](http://www.unixuser.org/~euske/doc/bashtips/index.html)
+
+`chdhist.sh` wraps `cd` to store a directory history.
+
+It loads following commands, too:
+
+    $ - # Move back
+    $ + # Move forward
+    $ = # Show the list
+
+* [wting/autojump: A cd command that learns - easily navigate directories from the command line](https://github.com/wting/autojump)
+
+Command selection tool, `autojump`, written in Python.
+
+To use it, users load a function `j` by sourcing **/usr/local/etc/autojump.sh**,
+and `j` calls `autojump` to select a directory.
+
+**/usr/local/etc/autojump.sh** also add `autojump_add_to_database` to
+`PROMPT_COMMAND`.
+`autojump_add_to_database` updates the directory history list after every command.
+
+Each directory has **key weight**, which is defined by how much user spends in a directory.
+
+Users can go the directory contains a word `foo` by
+
+    $ j foo
+
+if it is in the list.
+
+If there are more than one corresponding directories,
+the highest weight directory is chosen.
+
+    $ jc foo
+
+searches for directories only under the current directory.
+
+It also loads command `jo` which opens the directory by an explorer.
+
+* [rupa/z: z - jump around](https://github.com/rupa/z)
+
+`z` is similar tool to autojump, but written in Shell Script.
+So it is almost no dependency on external commands (though it uses such awk, grep).
+
+Sourcing **z.sh** loads `z` command.
+In addition, it adds `_z --add...` to `PROMPT_COMMAND`.
+`_z --add...` updates the directory list with current directory,
+and adds **frecency**(=frequency+recency), which is defined by how frequently and recently user works in there.
+
+    $ z foo
+
+This select the directory contains foo.
+
+If there are more than one corresponding directories,
+the highest frecency directory is chosen.
+
+`z` has also some selection mode like `z -r foo` (most highest frequency) or `z -t -foo` (most highest recency).
+
+* [b4b4r07/enhancd: A next-generation cd command with an interactive filter](https://github.com/b4b4r07/enhancd)
+
+`cd` wrap tool written in Shell Script.
+
+By sourcing `init.sh`, `cd` will work as history register and directory searcher.
+
+After every `cd`, it adds the current directly,
+all directoies in the path to the current directory,
+and child directories of the current directory.
+**enhancd** doesn't add a weight.
+
+    $ source ./init.sh
+
+Then,
+
+    $ cd foo
+
+searches for a directory including `foo` from the list.
+
+If there are more than one directories,
+it launches a selection mode.
+You need one of selection tools like fzy, fjf, peco, sentaku, etc...
+
+**enhanced** wraps such `cd ..` and `cd -`, too,
+to launches a selection mode for upper directories or past directories, respectively.
+
 ## References
 
 * [sd_cl: pecoやfzfなどにも対応したディレクトリ移動効率化ツール](https://rcmdnk.com/blog/2018/08/18/computer-shell/)
 * [ターミナルでのディレクトリ移動を保存、取り出しする](http://rcmdnk.github.io/blog/2013/12/27/computer-bash-zsh-sd-cl/)
+* [ターミナルでのディレクトリ移動](https://rcmdnk.com/blog/2013/04/10/computer-bash/)

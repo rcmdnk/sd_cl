@@ -425,7 +425,7 @@ For Bash, add bindings in **.bashrc** something like:
 Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
 
     # Selection tool
-    SD_CL_TOOL=${SD_CL_TOOL:-sentaku}
+    SD_CL_TOOL=${SD_CL_TOOL:-sentaku,peco,percol,fzf,fzy,selecta,gof,picka}
 
     # Number of kept last directories
     SD_CL_N=${SD_CL_N:-20}
@@ -461,8 +461,16 @@ Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
     SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 
 
-If it is "NONE" or no selection tool is installed,
-it invokes shell interactive mode.
+You can decide a selection tool as you like by setting `SD_CL_TOOL`, like
+
+    SD_CL_TOOL=sentaku,peco,percol,fzf,fzy,selecta,gof,picka
+
+One or more tools can be set by comma separated array.
+
+If any of tools is not available,
+simple shell selection tool is launched.
+
+If you want to use simple shell selection as top priority, set `SD_CL_TOOL=NONE` or `SD_CL_TOOL=shell` (or SD_CL_TOOL="").
 
 `SD_CL_N` defines how many directories are kept in the last directory file.
 

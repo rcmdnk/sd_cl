@@ -64,8 +64,8 @@ SD_CL_ISPOSTCD=${SD_CL_ISPOSTCD:-1}
 SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
 SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
 
-# ZSH keybind
-SD_CL_ZSH_KEYBIND=1
+# keybind
+SD_CL_KEYBIND=1
 
 # cd wrap
 SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
@@ -738,10 +738,16 @@ if [ -n "$ZSH_VERSION" ];then
   zle -N fd _zsh_fd
   zle -N up _zsh_up
 
-  if [ "$SD_CL_ZSH_KEYBIND" = 1 ];then
+  if [ "$SD_CL_KEYBIND" = 1 ];then
     bindkey '^[o' bd
     bindkey '^[i' fd
     bindkey '^[u' up
+  fi
+elif [ -n "$BASH_VERSION" ];then
+  if [ "$SD_CL_KEYBIND" = 1 ];then
+    bind '"\eo": "\C-ubd\C-m"'
+    bind '"\ei": "\C-ufd\C-m"'
+    bind '"\eu": "\C-uup\C-m"'
   fi
 fi
 # }}}

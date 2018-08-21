@@ -392,14 +392,14 @@ If you want to use simple shell selection as top priority, set `SD_CL_TOOL=NONE`
 
 If you don't want to wrap `cd`, set `SD_CL_ISCDWRAP=0`.
 
-For Zsh, `Meta`(`Alt`)-`o` and `Meta`(`Alt`)-`i`
+For Bash/Zsh, `Meta`(`Alt`)-`o` and `Meta`(`Alt`)-`i`
 are bounden to `bd` and `fd`, respectively.
 In addition, `Meta`(`Alt`)-`u` is bounden to `up` (move up one directory).
 
-set `SD_CL_ZSH_BIND=0` to disable these binds.
+set `SD_CL_BIND=0` to disable these binds.
 
-If you want to assign different keys, set `SD_CL_ZSH_BIND=0` and then add
-bindings in **.zshrc** something like:
+If you want to assign different keys, set `SD_CL_BIND=0`.
+Then, for Zsh,  add bindings in **.zshrc** something like:
 
     SD_CL_ZSH_BIND=0
 
@@ -409,14 +409,15 @@ bindings in **.zshrc** something like:
     bindkey '^[b' fd
     bindkey '^[c' up
 
-For Bash, add following lines in **~/.inputrc** to get similar keybindings:
+For Bash, add bindings in **.bashrc** something like:
 
-```bash
-# move
-"\eo": "\C-ubd\C-m"
-"\ei": "\C-ufd\C-m"
-"\eu": "\C-uup\C-m"
-```
+    SD_CL_ZSH_BIND=0
+
+    source /path/to/sd_cl
+
+    bind '"\ea": "\C-ubd\C-m"'
+    bind '"\eb": "\C-ufd\C-m"'
+    bind '"\ec": "\C-uup\C-m"'
 
 
 ## Options
@@ -453,8 +454,8 @@ Following options can be set before sourcing `sd_cl` in `.bashrc` or `.zshrc`.
     SD_CL_NOCOMPLETION=${SD_CL_NOCOMPLETION:-0}
     SD_CL_NOCOMPINIT=${SD_CL_NOCOMPINIT:-0}
 
-    # ZSH keybind
-    SD_CL_ZSH_KEYBIND=1
+    # keybind
+    SD_CL_KEYBIND=1
 
     # cd wrap to pushd/popd
     SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
@@ -504,8 +505,8 @@ Otherwise `sd_cl` execute:
     autoload -Uz compinit
     compinit
 
-For Zsh user, if you don't want to bind keys to bd/fd/up,
-set `SD_CL_ZSH_KEYBIND=0`.
+If you don't want to bind keys to bd/fd/up,
+set `SD_CL_KEYBIND=0`.
 
 If you don't want to wrap `cd` with `pushd`, set `SD_CL_ISCDWRAP` to 0.
 

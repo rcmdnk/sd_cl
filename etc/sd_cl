@@ -327,24 +327,33 @@ cl () {
         _sd_cl_check_file "$file"
         dirs=()
         local windows=$(screen -Q windows)
-        local wininfo
-        local i=0
-        local d
-        for wininfo in $windows;do
-          if [ $i -eq 0 ];then
-            d=$(grep "^$(echo "${wininfo%\*}"|sed 's/-//') " "$file")
-            if [ -n "$d" ];then
-              dirs=("${dirs[@]}" "$d")
+        local ret=$?
+        if [ $ret -eq 0 ];then
+          local wininfo
+          local i=0
+          local d
+          for wininfo in $windows;do
+            if [ $i -eq 0 ];then
+              d=$(grep "^$(echo "${wininfo%\*}"|sed 's/-//') " "$file")
+              if [ -n "$d" ];then
+                dirs=("${dirs[@]}" "$d")
+              fi
             fi
-          fi
-          ((i++))
-          if [ $i -eq 3 ];then
-            i=0
-          fi
-        done
-        for d in "${dirs[@]}";do
-          echo "$d"
-        done > "$file"
+            ((i++))
+            if [ $i -eq 3 ];then
+              i=0
+            fi
+          done
+          for d in "${dirs[@]}";do
+            echo "$d"
+          done > "$file"
+        else
+          # simply read file if screen command failed
+          local d
+          while read -r d;do
+            dirs=("${dirs[@]}" "$d")
+          done < "$file"
+        fi
       }
     elif [ "$mode" = window ] && [ -n "$TMUX" ];then
       _cl_get_dirs () {

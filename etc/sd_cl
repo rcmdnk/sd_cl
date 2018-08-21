@@ -80,7 +80,7 @@ _SD_CL_FD_LIST=()
 _sd_cl_cd () {
   _SD_CL_FD_LIST=()
   _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
-  eval builtin cd "$1"
+  eval builtin cd "$@"
 }
 
 _sd_cl_check_file () {
@@ -905,13 +905,13 @@ if [ -n "$ZSH_VERSION" ];then
   fi
   if [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      _wrap_cd "$*"
+      _wrap_cd "$@"
     }
   fi
 else
   if [ "$SD_CL_ISPOSTCD" -eq 1 ] && [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      _wrap_cd "$*"
+      _wrap_cd "$@"
       local ret=$?
       if [ $ret -eq 0 ];then
         _post_cd
@@ -920,7 +920,7 @@ else
     }
   elif [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     cd () {
-      builtin cd "$*"
+      builtin cd "$@"
       local ret=$?
       if [ $ret -eq 0 ];then
         _post_cd
@@ -929,7 +929,7 @@ else
     }
   elif [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      _wrap_cd "$*"
+      _wrap_cd "$@"
     }
   fi
 fi
@@ -937,6 +937,6 @@ fi
 
 # Move to actual pwd {{{
 cdpwd () {
-  _sd_cl_cd "$(pwd -P)"
+  _sd_cl_cd -P .
 }
 # }}}

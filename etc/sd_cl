@@ -856,19 +856,33 @@ _post_cd () {
 
 # function for cd wrap {{{
 _wrap_cd () {
+  local opt=()
+  while :;do
+    if [ "$1" = "-L" ] || [ "$1" = "-P" ] || [ "$1" = "-e" ] || [ "$1" = "-@" ];then
+      opt=("${opt[@]}" "$1")
+      shift
+    else
+      break
+    fi
+  done
   local dir="$*"
-  if [ -z "$*" ];then
+  if [ -z "$dir" ];then
     if [ "$(pwd)" = "$HOME" ];then
       return
     else
       dir="$HOME"
     fi
   else
-    if [ -f "$*" ];then
-      dir=$(dirname "$*")
+    if echo " ${opt[*]} "|grep -q " -P " >/dev/null;then
+      if [ -L "$dir" ];then
+        dir=$(readlink "$dir")
+      fi
+    fi
+    if [ -f "$dir" ];then
+      dir=$(dirname "$dir")
     fi
   fi
-  _sd_cl_cd "$dir"
+  _sd_cl_cd "${opt[@]}" "$dir"
 }
 
 # go back/forward

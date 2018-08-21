@@ -863,9 +863,6 @@ _wrap_cd () {
     else
       dir="$HOME"
     fi
-  elif [ "$*" = "-" ];then
-    cl -b 0
-    return
   else
     if [ -f "$*" ];then
       dir=$(dirname "$*")

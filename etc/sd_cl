@@ -78,9 +78,12 @@ _SD_CL_FD_LIST=()
 
 # support functions {{{
 _sd_cl_cd () {
-  _SD_CL_FD_LIST=()
-  _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
-  eval builtin cd "$1"
+  local curdir=$(pwd)
+  if [ "$curdir" != "$(_sd_cl_get_n 0 "${_SD_CL_BD_LIST[@]}")" ];then
+    _SD_CL_FD_LIST=()
+    _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
+  fi
+  eval builtin cd "$@"
 }
 
 _sd_cl_check_file () {
@@ -564,6 +567,11 @@ cl () {
   fi
 
   _sd_cl_cd "$dir"
+  local ret=$?
+  if [ $ret -eq 0 ] && [ "$SD_CL_ISPOSTCD" -eq 1 ] && type _post_cd >&/dev/null;then
+     _post_cd
+  fi
+  return $ret
 } # }}}
 
 # Completion {{{
@@ -856,22 +864,30 @@ _post_cd () {
 
 # function for cd wrap {{{
 _wrap_cd () {
-  local dir="$*"
-  if [ -z "$*" ];then
+  local opt=()
+  local dir=""
+  while :;do
+    if [ "$1" = "-L" ] || [ "$1" = "-P" ] || [ "$1" = "-e" ] || [ "$1" = "-@" ];then
+      opt=$("${opt[@]}" "$1")
+      shift
+    fi
+    dir="$*"
+  done
+  if [ -z "$dir" ];then
     if [ "$(pwd)" = "$HOME" ];then
       return
     else
       dir="$HOME"
     fi
-  elif [ "$*" = "-" ];then
+  elif [ "$dir" = "-" ];then
     cl -b 0
     return
   else
-    if [ -f "$*" ];then
-      dir=$(dirname "$*")
+    if [ -f "$dir" ];then
+      dir=$(dirname "$dir")
     fi
   fi
-  _sd_cl_cd "$dir"
+  _sd_cl_cd "${opt[@]}" "$dir"
 }
 
 # go back/forward
@@ -896,7 +912,7 @@ up () {
 }
 # }}}
 
-# Set cd/chpwd {{{
+# Set cd {{{
 if [ -n "$ZSH_VERSION" ];then
   if [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     chpwd () {
@@ -905,13 +921,13 @@ if [ -n "$ZSH_VERSION" ];then
   fi
   if [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      _wrap_cd "$*"
+      _wrap_cd "$@"
     }
   fi
 else
   if [ "$SD_CL_ISPOSTCD" -eq 1 ] && [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      _wrap_cd "$*"
+      _wrap_cd "$@"
       local ret=$?
       if [ $ret -eq 0 ];then
         _post_cd
@@ -920,7 +936,7 @@ else
     }
   elif [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     cd () {
-      builtin cd "$*"
+      builtin cd "$@"
       local ret=$?
       if [ $ret -eq 0 ];then
         _post_cd
@@ -929,7 +945,7 @@ else
     }
   elif [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
-      _wrap_cd "$*"
+      _wrap_cd "$@"
     }
   fi
 fi
@@ -937,6 +953,12 @@ fi
 
 # Move to actual pwd {{{
 cdpwd () {
-  _sd_cl_cd "$(pwd -P)"
+  _sd_cl_cd -P .
+}
+# }}}
+
+# Move to the directory where the link is {{{
+cdlink () {
+  _sd_cl_cd -P "$*"
 }
 # }}}

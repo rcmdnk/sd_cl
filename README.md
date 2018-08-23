@@ -387,7 +387,8 @@ If you want to use simple shell selection as top priority, set `SD_CL_TOOL=NONE`
 * bd (back Directory): Wrap function for `cl -b`.
 * fd (Forward Directory): Wrap function for `cl -f`.
 * up : Move up one directory.
-* cdpwd : works as `cd $(pwd -P)`, i.e. resolves symbolic links in the path.
+* cdpwd : works as `cd -P .` or `cd $(pwd -P)`, i.e. resolves symbolic links of the current path.
+* cdlink : works as `cd -P <path>`, i.e. resolves symbolic links in <path>.
 * cd : `cd` is wrapped to manage history, ranking, etc...
 
 If you don't want to wrap `cd`, set `SD_CL_ISCDWRAP=0`.

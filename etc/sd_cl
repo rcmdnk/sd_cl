@@ -78,8 +78,11 @@ _SD_CL_FD_LIST=()
 
 # support functions {{{
 _sd_cl_cd () {
-  _SD_CL_FD_LIST=()
-  _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
+  local curdir=$(pwd)
+  if [ "$curdir" != "$(_sd_cl_get_n 0 "${_SD_CL_BD_LIST[@]}")" ];then
+    _SD_CL_FD_LIST=()
+    _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
+  fi
   eval builtin cd "$@"
 }
 
@@ -564,6 +567,11 @@ cl () {
   fi
 
   _sd_cl_cd "$dir"
+  local ret=$?
+  if [ $ret -eq 0 ] && [ "$SD_CL_ISPOSTCD" -eq 1 ] && type _post_cd >&/dev/null;then
+     _post_cd
+  fi
+  return $ret
 } # }}}
 
 # Completion {{{
@@ -872,12 +880,10 @@ _wrap_cd () {
     else
       dir="$HOME"
     fi
+  elif [ "$dir" = "-" ];then
+    cl -b 0
+    return
   else
-    if echo " ${opt[*]} "|grep -q " -P " >/dev/null;then
-      if [ -L "$dir" ];then
-        dir=$(readlink "$dir")
-      fi
-    fi
     if [ -f "$dir" ];then
       dir=$(dirname "$dir")
     fi
@@ -907,7 +913,7 @@ up () {
 }
 # }}}
 
-# Set cd/chpwd {{{
+# Set cd {{{
 if [ -n "$ZSH_VERSION" ];then
   if [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     chpwd () {
@@ -949,5 +955,11 @@ fi
 # Move to actual pwd {{{
 cdpwd () {
   _sd_cl_cd -P .
+}
+# }}}
+
+# Move to the directory where the link is {{{
+cdlink () {
+  _sd_cl_cd -P "$*"
 }
 # }}}

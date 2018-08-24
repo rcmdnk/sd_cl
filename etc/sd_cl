@@ -951,12 +951,17 @@ fi
 
 # Move to actual pwd {{{
 cdpwd () {
-  _sd_cl_cd -P .
+  _wrap_cd -P .
 }
 # }}}
 
 # Move to the directory where the link is {{{
 cdlink () {
-  _sd_cl_cd -P "$*"
+  local dir="$*"
+  local link=$(readlink -n "$dir")
+  if [ -n "$link" ];then
+    dir="$link"
+  fi
+  _wrap_cd -P "$dir"
 }
 # }}}

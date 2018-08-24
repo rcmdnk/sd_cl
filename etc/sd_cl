@@ -77,13 +77,47 @@ _SD_CL_FD_LIST=()
 # }}}
 
 # support functions {{{
-_sd_cl_cd () {
+_sd_cl_pre_cd () {
   local curdir=$(pwd)
   if [ "$curdir" != "$(_sd_cl_get_n 0 "${_SD_CL_BD_LIST[@]}")" ];then
     _SD_CL_FD_LIST=()
     _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
   fi
+}
+
+_sd_cl_cd () {
+  _sd_cl_pre_cd
   eval builtin cd "$@"
+  local ret=$?
+  if [ $ret -eq 0 ];then
+    _sd_cl_post_cd
+  fi
+  return $ret
+}
+
+_sd_cl_post_cd () {
+  if [ "$SD_CL_RANKING_METHOD" -eq 1 ];then
+    _sd_cl_ranking
+  fi
+  if [ -z "$STY" ] && [ -z "$TMUX" ];then
+    return
+  fi
+  if [ -n "$STY" ];then
+    local win="$WINDOW"
+    local pane=0
+  else
+    local win="$(tmux display -p '#I')"
+    local pane="$(tmux display -p '#P')"
+  fi
+  local wdf=${SD_CL_WINDOW_FILE}
+  _sd_cl_check_file "$wdf"
+  local dir=$(_sd_cl_get_dir)
+  if grep -q "^$win $pane " "$wdf";then
+    local wd=$(sed "s|^$win $pane .*$|$win $pane $dir|" "$wdf"|sort -n)
+  else
+    local wd=$(cat "$wdf" && echo "$win $pane $dir"|sort -n)
+  fi
+  echo "$wd" > "${wdf}"
 }
 
 _sd_cl_check_file () {
@@ -568,8 +602,8 @@ cl () {
 
   _sd_cl_cd "$dir"
   local ret=$?
-  if [ $ret -eq 0 ] && [ "$SD_CL_ISPOSTCD" -eq 1 ] && type _post_cd >&/dev/null;then
-     _post_cd
+  if [ $ret -eq 0 ] && [ "$SD_CL_ISPOSTCD" -eq 1 ] && type _sd_cl_post_cd >&/dev/null;then
+     _sd_cl_post_cd
   fi
   return $ret
 } # }}}
@@ -835,33 +869,6 @@ if [ "$SD_CL_RANKING_METHOD" -eq 2 ];then
 fi
 # }}}
 
-# function for post cd {{{
-_post_cd () {
-  if [ "$SD_CL_RANKING_METHOD" -eq 1 ];then
-    _sd_cl_ranking
-  fi
-  if [ -z "$STY" ] && [ -z "$TMUX" ];then
-    return
-  fi
-  if [ -n "$STY" ];then
-    local win="$WINDOW"
-    local pane=0
-  else
-    local win="$(tmux display -p '#I')"
-    local pane="$(tmux display -p '#P')"
-  fi
-  local wdf=${SD_CL_WINDOW_FILE}
-  _sd_cl_check_file "$wdf"
-  local dir=$(_sd_cl_get_dir)
-  if grep -q "^$win $pane " "$wdf";then
-    local wd=$(sed "s|^$win $pane .*$|$win $pane $dir|" "$wdf"|sort -n)
-  else
-    local wd=$(cat "$wdf" && echo "$win $pane $dir"|sort -n)
-  fi
-  echo "$wd" > "${wdf}"
-}
-# }}}
-
 # function for cd wrap {{{
 _wrap_cd () {
   local opt=()
@@ -915,38 +922,28 @@ up () {
 
 # Set cd {{{
 if [ -n "$ZSH_VERSION" ];then
-  if [ "$SD_CL_ISPOSTCD" -eq 1 ];then
-    chpwd () {
-      _post_cd
-    }
-  fi
   if [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
       _wrap_cd "$@"
     }
+  elif [ "$SD_CL_ISPOSTCD" -eq 1 ];then
+    chpwd () {
+      _sd_cl_post_cd
+    }
   fi
 else
-  if [ "$SD_CL_ISPOSTCD" -eq 1 ] && [ "$SD_CL_ISCDWRAP" -eq 1 ];then
+  if [ "$SD_CL_ISCDWRAP" -eq 1 ];then
     cd () {
       _wrap_cd "$@"
-      local ret=$?
-      if [ $ret -eq 0 ];then
-        _post_cd
-      fi
-      return $ret
     }
   elif [ "$SD_CL_ISPOSTCD" -eq 1 ];then
     cd () {
       builtin cd "$@"
       local ret=$?
       if [ $ret -eq 0 ];then
-        _post_cd
+        _sd_cl_post_cd
       fi
       return $ret
-    }
-  elif [ "$SD_CL_ISCDWRAP" -eq 1 ];then
-    cd () {
-      _wrap_cd "$@"
     }
   fi
 fi

@@ -529,12 +529,12 @@ Otherwise `sd_cl` overwrites these functions.
 
 If you want to have automatic save in GNU screen/tmux with your `cd`/`chpwd`,
 first, set above SD_CL_ISPOSTCD and SD_CL_ISCDWRAP as 0 to disable to wrap in `sd_cl`,
-then call `post_cd` in your `cd` function for Bash like:
+then call `_sd_cl_post_cd` in your `cd` function for Bash like:
 
     builtin cd "$@"
     local ret=$?
     if [ $ret -eq 0 ];then
-      post_cd
+      _sd_cl_post_cd
     fi
     return $ret
 
@@ -543,10 +543,10 @@ or simply call `post_cd` in `chpwd` for Zsh case.
 If you want to enable pushd wrap in your `cd` function,
 replace your `builtin(command) cd` command with
 
-    wrap_cd "$@"
+    _wrap_cd "$@"
 
 i.e., if you want to enable both in Bash, you should replace above `builtin cd "$@"`
-with `wrap_cd "$@"`.
+with `_wrap_cd "$@"`.
 
 ## Other similar tools
 

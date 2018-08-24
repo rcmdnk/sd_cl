@@ -752,7 +752,7 @@ if [ -n "$ZSH_VERSION" ];then
     bindkey '^[u' up
   fi
 elif [ -n "$BASH_VERSION" ];then
-  if [ "$SD_CL_KEYBIND" = 1 ] && [ -t 1 ];then
+  if [ "$SD_CL_KEYBIND" = 1 ] && [ "${-#*i}" != "$-" ]; then
     bind '"\eo": "\C-ubd\C-m"'
     bind '"\ei": "\C-ufd\C-m"'
     bind '"\eu": "\C-uup\C-m"'

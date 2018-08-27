@@ -569,10 +569,10 @@ A lot of attempts to make wrapper functions for these commands can be found.
 
 The simplest one is something like:
 
-{% codeblock .bashrc lang:bash %}
+```bash
 alias cd="pushd"
 alias bd="popd"
-{% endcodeblock %}
+```
 
 * [cdhist.sh](http://www.unixuser.org/~euske/doc/bashtips/cdhist.sh)
 

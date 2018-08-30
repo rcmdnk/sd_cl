@@ -79,7 +79,7 @@ _SD_CL_FD_LIST=()
 # support functions {{{
 _sd_cl_pre_cd () {
   local curdir=$(pwd)
-  if [ "$curdir" != "$(_sd_cl_get_n 0 "${_SD_CL_BD_LIST[@]}")" ];then
+  if [[ "$curdir" != "$(_sd_cl_get_n 0 "${_SD_CL_BD_LIST[@]}")" ]];then
     _SD_CL_FD_LIST=()
     _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
   fi
@@ -89,20 +89,20 @@ _sd_cl_cd () {
   _sd_cl_pre_cd
   eval builtin cd "$@"
   local ret=$?
-  if [ $ret -eq 0 ];then
+  if [[ $ret -eq 0 ]];then
     _sd_cl_post_cd
   fi
   return $ret
 }
 
 _sd_cl_post_cd () {
-  if [ "$SD_CL_RANKING_METHOD" -eq 1 ];then
+  if [[ "$SD_CL_RANKING_METHOD" -eq 1 ]];then
     _sd_cl_ranking
   fi
-  if [ -z "$STY" ] && [ -z "$TMUX" ];then
+  if [[ -z "$STY" && -z "$TMUX" ]];then
     return
   fi
-  if [ -n "$STY" ];then
+  if [[ -n "$STY" ]];then
     local win="$WINDOW"
     local pane=0
   else
@@ -131,14 +131,14 @@ _sd_cl_reset_file () {
 }
 
 _sd_cl_edit_file () {
-  if [ -n "$1" ];then
+  if [[ -n "$1" ]];then
     _sd_cl_check_file "$1"
     ${EDITOR:-"vi"} "$1"
   fi
 }
 
 _sd_cl_get_dir () {
-  if [ $# -ge 1 ];then
+  if [[ $# -ge 1 ]];then
     local dir="$1"
   else
     local dir="$(pwd)"
@@ -159,7 +159,7 @@ _sd_cl_check_dir () {
 
 _sd_cl_get_n () {
   local n=$1
-  if [ -n "$n" ];then
+  if [[ -n "$n" ]];then
     shift
     ((n++))
     eval echo \$${n}
@@ -195,7 +195,7 @@ sd () {
   local dir=""
 
   # Get arguments
-  while [ $# -gt 0 ];do
+  while [[ $# -gt 0 ]];do
     case $1 in
       "-e" ) edit=1;;
       "-c" ) file=${SD_CL_LASTDIR_FILE};;
@@ -217,19 +217,19 @@ sd () {
   done
 
   # Edit predefined dir
-  if [ "$edit" -eq 1 ];then
+  if [[ "$edit" -eq 1 ]];then
     _sd_cl_edit_file "$file"
     return
   fi
 
   # Clear
-  if [ "$cleardir" -eq 1 ];then
+  if [[ "$cleardir" -eq 1 ]];then
     _sd_cl_reset_file "$file"
     return
   fi
 
   # Set Save Dir
-  if [ -z "$dir" ];then
+  if [[ -z "$dir" ]];then
     # Current directory
     dir=$(_sd_cl_get_dir)
   fi
@@ -240,7 +240,7 @@ sd () {
     _sd_cl_check_file "$file"
     local pre_list="$(grep -v "^${dir}$" < "$file"|grep -v '^\s*$'|head -n"$((SD_CL_N-1))")"
     echo "$dir" > "$file"
-    if [ -n "$pre_list" ];then
+    if [[ -n "$pre_list" ]];then
       echo "$pre_list" >> "$file"
     fi
   fi
@@ -251,10 +251,10 @@ cl () {
   local file="${SD_CL_LASTDIR_FILE}"
 
   # Change to the last dir
-  if [ $# -eq 0 ];then
+  if [[ $# -eq 0 ]];then
     _sd_cl_check_file "$file"
     local ld="$(head -n1 "${SD_CL_LASTDIR_FILE}")"
-    if [ -n "$ld" ];then
+    if [[ -n "$ld" ]];then
       _sd_cl_cd "$ld"
       return
     else
@@ -300,7 +300,7 @@ cl () {
   local selection_tools="$SD_CL_TOOL"
 
   # Get arguments
-  while [ $# -gt 0 ];do
+  while [[ $# -gt 0 ]];do
     case $1 in
       "-l" ) list=1;;
       "-e" ) edit=1;;
@@ -337,47 +337,47 @@ cl () {
   done
 
   # Clear
-  if [ "$cleardir" -eq 1 ];then
-    if [ -n "$file" ];then
+  if [[ "$cleardir" -eq 1 ]];then
+    if [[ -n "$file" ]];then
       : > "$file"
-    elif [ "$mode" = "back" ];then
+    elif [[ "$mode" = "back" ]];then
       _SD_CL_BD_LIST=()
-    elif [ "$mode" = "forward" ];then
+    elif [[ "$mode" = "forward" ]];then
       _SD_CL_FD_LIST=()
     fi
     return
   fi
 
   # Edit
-  if [ "$edit" -eq 1 ];then
+  if [[ "$edit" -eq 1 ]];then
     _sd_cl_edit_file "$file"
     return
   fi
 
   # Set get_dirs function
-  if [ -n "$file" ];then
-    if [ "$mode" = ranking ];then
+  if [[ -n "$file" ]];then
+    if [[ "$mode" = ranking ]];then
       _sd_cl_ranking_update
     fi
-    if [ "$mode" = window ] && [ -n "$STY" ];then
+    if [[ "$mode" = window && -n "$STY" ]];then
       _cl_get_dirs () {
         _sd_cl_check_file "$file"
         dirs=()
         local windows=$(screen -Q windows)
         local ret=$?
-        if [ $ret -eq 0 ];then
+        if [[ $ret -eq 0 ]];then
           local wininfo
           local i=0
           local d
           for wininfo in $windows;do
-            if [ $i -eq 0 ];then
+            if [[ $i -eq 0 ]];then
               d=$(grep "^$(echo "${wininfo%\*}"|sed 's/-//') " "$file")
-              if [ -n "$d" ];then
+              if [[ -n "$d" ]];then
                 dirs=("${dirs[@]}" "$d")
               fi
             fi
             ((i++))
-            if [ $i -eq 3 ];then
+            if [[ $i -eq 3 ]];then
               i=0
             fi
           done
@@ -392,7 +392,7 @@ cl () {
           done < "$file"
         fi
       }
-    elif [ "$mode" = window ] && [ -n "$TMUX" ];then
+    elif [[ "$mode" = window && -n "$TMUX" ]];then
       _cl_get_dirs () {
         _sd_cl_check_file "$file"
         local windows=$(tmux lsp -s -F '#I.#P')
@@ -401,7 +401,7 @@ cl () {
         local d
         for wininfo in $windows;do
           d=$(grep "^${wininfo/,/ } " "$file")
-          if [ -n "$d" ];then
+          if [[ -n "$d" ]];then
             dirs=("${dirs[@]}" "$d")
           fi
         done
@@ -419,22 +419,22 @@ cl () {
         done < "$file"
       }
     fi
-  elif [ "$mode" = vim ];then
+  elif [[ "$mode" = vim ]];then
     _cl_get_dirs () {
       dirs=()
       for d in *;do
-        if [ ! -d "$d" ];then
+        if [[ ! -d "$d" ]];then
           continue
         fi
         dirs=("${dirs[@]}" "$d")
       done
       dirs=(".." "${dirs[@]}")
     }
-  elif [ "$mode" = back ];then
+  elif [[ "$mode" = back ]];then
     _cl_get_dirs () {
       dirs=("${_SD_CL_BD_LIST[@]}")
     }
-  elif [ "$mode" = forward ];then
+  elif [[ "$mode" = forward ]];then
     _cl_get_dirs () {
       dirs=("${_SD_CL_FD_LIST[@]}")
     }
@@ -442,13 +442,13 @@ cl () {
   _cl_get_dirs
 
   # Check dirs
-  if [ "${#dirs[@]}" -eq 0 ];then
+  if [[ "${#dirs[@]}" -eq 0 ]];then
     echo "No directory is stored for $mode"
     return
   fi
 
   # List up
-  if [ "$list" -eq 1 ];then
+  if [[ "$list" -eq 1 ]];then
     local d
     local i=0
     for d in "${dirs[@]}";do
@@ -462,21 +462,21 @@ cl () {
   local dirs_tmp=()
   local d
   for d in "${dirs[@]}";do
-    if [ "$SD_CL_SHOW_MORE_INFO" -eq 0 ];then
-      if [ "$mode" = window ];then
+    if [[ "$SD_CL_SHOW_MORE_INFO" -eq 0 ]];then
+      if [[ "$mode" = window ]];then
         d=$(echo "$d"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
-      elif [ "$mode" = ranking ];then
+      elif [[ "$mode" = ranking ]];then
         d=$(echo "$d"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
       fi
     fi
-    if [ -n "$dir" ];then
+    if [[ -n "$dir" ]];then
       if ! eval echo "$d" |eval grep -q -- "$dir";then
         continue
       fi
     fi
     dirs_tmp=("${dirs_tmp[@]}" "$d")
   done
-  if [ "${#dirs_tmp[@]}" -eq 0 ];then
+  if [[ "${#dirs_tmp[@]}" -eq 0 ]];then
     echo "No such a directory is stored for $mode: ${dir}"
     return $_SD_CL_ERROR_NOT_STORED
   fi
@@ -486,8 +486,8 @@ cl () {
     dirs=("${dirs[@]}" "$d")
   done
 
-  if [ -n "$n" ];then
-    if ! ((n+1)) >&/dev/null || [ "$n" -ge "${#dirs[@]}" ];then
+  if [[ -n "$n" ]];then
+    if ! ((n+1)) >&/dev/null || [[ "$n" -ge "${#dirs[@]}" ]];then
       echo "$n is not valid number."
       echo "Enter [0-$((${#dirs[@]}-1))]"
       return $_SD_CL_ERROR_INVALID_N
@@ -495,17 +495,17 @@ cl () {
     dirs=("$(_sd_cl_get_n "$n" "${dirs[@]}")")
   fi
 
-  if [ "${#dirs[@]}" -eq 1 ] &&  [ "$mode" != vim ];then
+  if [[ "${#dirs[@]}" -eq 1 && "$mode" != vim ]];then
     dir="$(_sd_cl_get_n 0 "${dirs[@]}")"
   else
     # Set selection tool
     local selection=""
     local s
     for s in ${selection_tools//,/ };do
-      if [ -z "$s" ];then
+      if [[ -z "$s" ]];then
         continue
       fi
-      if [ "$s" = "NONE" ] || [ "$s" = "shell" ];then
+      if [[ "$s" = "NONE" || "$s" = "shell" ]];then
         break
       fi
       if type "$s" >& /dev/null ;then
@@ -513,37 +513,37 @@ cl () {
         break
       fi
     done
-    if [ "$selection" = "sentaku" ];then
+    if [[ "$selection" = "sentaku" ]];then
       selection="sentaku -s line"
     fi
 
     while :;do
-      if [ -n "$selection" ];then
+      if [[ -n "$selection" ]];then
         dir=$(for d in "${dirs[@]}";do echo "$d";done|eval "$selection")
       else
         local d
         local i=$((${#dirs[@]}-1))
-        while [ $i -ge 0 ];do
+        while [[ $i -ge 0 ]];do
           printf "%3d: %s\\n" $i "$(_sd_cl_get_n $i "${dirs[@]}")"
           ((i--))
         done
         printf "\\nChoose directory number: "
         read -r i
-        if [ -z "$i" ];then
+        if [[ -z "$i" ]];then
           return
         fi
-        if ! ((i+1)) >&/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
+        if ! ((i+1)) >&/dev/null || [[ "$i" -ge "${#dirs[@]}" ]];then
           echo "$i is not valid."
           echo "Enter [0-$((${#dirs[@]}-1))]"
           return $_SD_CL_ERROR_INVALID_INPUT
         fi
         dir="$(_sd_cl_get_n "$i" "${dirs[@]}")"
       fi
-      if [ -z "$dir" ];then
+      if [[ -z "$dir" ]];then
         return
       fi
 
-      if [ "$mode" = vim ];then
+      if [[ "$mode" = vim ]];then
         _sd_cl_cd "$dir"
         _cl_get_dirs
       else
@@ -552,19 +552,19 @@ cl () {
     done
   fi
 
-  if [ "$mode" = back ];then
+  if [[ "$mode" = back ]];then
     local dirs_tmp=("${_SD_CL_BD_LIST[@]}")
     _SD_CL_BD_LIST=()
     _SD_CL_FD_LIST=("$(pwd)" "${_SD_CL_FD_LIST[@]}")
     local store=0
     for d in "${dirs_tmp[@]}";do
-      if [ "$store" -eq 1 ];then
+      if [[ "$store" -eq 1 ]];then
         _SD_CL_BD_LIST=("${_SD_CL_BD_LIST[@]}" "$d")
       fi
-      if [ "$d" = "$dir" ];then
+      if [[ "$d" = "$dir" ]];then
         store=1
       fi
-      if [ "$store" -eq 0 ];then
+      if [[ "$store" -eq 0 ]];then
         _SD_CL_FD_LIST=("$d" "${_SD_CL_FD_LIST[@]}")
       fi
     done
@@ -572,19 +572,19 @@ cl () {
     return
   fi
 
-  if [ "$mode" = forward ];then
+  if [[ "$mode" = forward ]];then
     local dirs_tmp=("${_SD_CL_FD_LIST[@]}")
     _SD_CL_FD_LIST=()
     _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
     local store=0
     for d in "${dirs_tmp[@]}";do
-      if [ "$store" -eq 1 ];then
+      if [[ "$store" -eq 1 ]];then
         _SD_CL_FD_LIST=("${_SD_CL_FD_LIST[@]}" "$d")
       fi
-      if [ "$d" = "$dir" ];then
+      if [[ "$d" = "$dir" ]];then
         store=1
       fi
-      if [ "$store" -eq 0 ];then
+      if [[ "$store" -eq 0 ]];then
         _SD_CL_BD_LIST=("$d" "${_SD_CL_BD_LIST[@]}")
       fi
     done
@@ -592,26 +592,26 @@ cl () {
     return
   fi
 
-  if [ "$SD_CL_SHOW_MORE_INFO" -ne 0 ];then
-    if [ "$mode" = window ];then
+  if [[ "$SD_CL_SHOW_MORE_INFO" -ne 0 ]];then
+    if [[ "$mode" = window ]];then
       dir=$(echo "$dir"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
-    elif [ "$mode" = ranking ];then
+    elif [[ "$mode" = ranking ]];then
       dir=$(echo "$dir"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
     fi
   fi
 
   _sd_cl_cd "$dir"
   local ret=$?
-  if [ $ret -eq 0 ] && [ "$SD_CL_ISPOSTCD" -eq 1 ] && type _sd_cl_post_cd >&/dev/null;then
+  if [[ $ret -eq 0 && "$SD_CL_ISPOSTCD" -eq 1 ]] && type _sd_cl_post_cd >&/dev/null;then
      _sd_cl_post_cd
   fi
   return $ret
 } # }}}
 
 # Completion {{{
-if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
-  if [ -n "$ZSH_VERSION" ];then
-    if [ "$SD_CL_NOCOMPINIT" -eq 0 ];then
+if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
+  if [[ -n "$ZSH_VERSION" ]];then
+    if [[ "$SD_CL_NOCOMPINIT" -eq 0 ]];then
       autoload -Uz compinit
       compinit
     fi
@@ -652,7 +652,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       fi
       local orig_ifs=$IFS
       IFS=$'\n'
-      if [ "$ldf" = "all" ];then
+      if [[ "$ldf" = "all" ]];then
         ldf=${SD_CL_LASTDIR_FILE}
         local pdf=${SD_CL_PREDEF_FILE}
         _sd_cl_check_file "$ldf"
@@ -661,11 +661,11 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
         compadd $(cat "$pdf")
         compadd "${_SD_CL_BD_LIST[@]}"
         compadd "${_SD_CL_FD_LIST[@]}"
-      elif [ "$ldf" = back ];then
+      elif [[ "$ldf" = back ]];then
         compadd "${_SD_CL_BD_LIST[@]}"
-      elif [ "$ldf" = forward ];then
+      elif [[ "$ldf" = forward ]];then
         compadd "${_SD_CL_FD_LIST[@]}"
-      elif [ -n "$ldf" ];then
+      elif [[ -n "$ldf" ]];then
         if echo "$state"|grep -q window;then
           compadd $(cat $ldf|cut -d' ' -f 3-)
         elif echo "$state"|grep -q ranking;then
@@ -688,7 +688,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
     }
     compdef _fd fd
     # }}}
-  elif [ -n "$BASH_VERSION" ];then
+  elif [[ -n "$BASH_VERSION" ]];then
     _cl () { # {{{
       COMPREPLY=()
       local cur=${COMP_WORDS[COMP_CWORD]}
@@ -700,7 +700,7 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       local nocomp=0
       local i
       for i in $(seq 1 $((COMP_CWORD)));do
-        if [ -z "${COMP_WORDS[$i]}" ] || [ "${COMP_WORDS[$i]}" = "-" ];then
+        if [[ -z "${COMP_WORDS[$i]}" || "${COMP_WORDS[$i]}" = "-" ]];then
           continue
         fi
         if echo "${opts[@]}"|grep -q -- "${COMP_WORDS[$i]}";then
@@ -714,10 +714,10 @@ if [ "$SD_CL_NOCOMPLETION" -eq 0 ];then
       if [[ "$cur" == -* ]];then
         COMPREPLY=($( compgen -W "${opts[*]}" -- "$cur"))
         return
-      elif [ -n "${COMP_WORDS[$i]}" ] && echo "${opts[@]}"|grep -q -- "$cur";then
+      elif [[ -n "${COMP_WORDS[$i]}" ]] && echo "${opts[@]}"|grep -q -- "$cur";then
         COMPREPLY=("$cur")
         return
-      elif [ $nocomp -eq 1 ];then
+      elif [[ $nocomp -eq 1 ]];then
         return
       elif [[ "$prev" != -* && $COMP_CWORD -ne 1 ]];then
         return
@@ -763,7 +763,7 @@ fi
 # }}}
 
 # Zsh keybind {{{
-if [ -n "$ZSH_VERSION" ];then
+if [[ -n "$ZSH_VERSION" ]];then
   _zsh_bd () {
     bd >/dev/null
     zle reset-prompt
@@ -780,13 +780,13 @@ if [ -n "$ZSH_VERSION" ];then
   zle -N fd _zsh_fd
   zle -N up _zsh_up
 
-  if [ "$SD_CL_KEYBIND" = 1 ];then
+  if [[ "$SD_CL_KEYBIND" = 1 ]];then
     bindkey '^[o' bd
     bindkey '^[i' fd
     bindkey '^[u' up
   fi
-elif [ -n "$BASH_VERSION" ];then
-  if [ "$SD_CL_KEYBIND" = 1 ] && [ "${-#*i}" != "$-" ]; then
+elif [[ -n "$BASH_VERSION" ]];then
+  if [[ "$SD_CL_KEYBIND" = 1 && "${-#*i}" != "$-" ]]; then
     bind '"\eo": "\C-ubd\C-m"'
     bind '"\ei": "\C-ufd\C-m"'
     bind '"\eu": "\C-uup\C-m"'
@@ -805,7 +805,7 @@ _sd_cl_ranking_update () {
   while read -r rank dir;do
     ((rank+1)) >&/dev/null || continue
     rank=$((rank-trial))
-    if [ "$rank" -le 0 ];then
+    if [[ "$rank" -le 0 ]];then
       continue
     fi
     dirs=("${dirs[@]}" "$rank $dir")
@@ -818,7 +818,7 @@ _sd_cl_ranking_update () {
 }
 
 _sd_cl_ranking () {
-  if [ -n "$SD_CL_RANKING_EXCLUDE" ];then
+  if [[ -n "$SD_CL_RANKING_EXCLUDE" ]];then
     local orig_ifs=$IFS
     IFS=","
     local exclude=($(echo "$SD_CL_RANKING_EXCLUDE"))
@@ -826,20 +826,20 @@ _sd_cl_ranking () {
     local dir
     local curdir="$(pwd)"
     for dir in "${exclude[@]}";do
-      if [ "$curdir" = "$(eval echo "$dir")" ];then
+      if [[ "$curdir" = "$(eval echo "$dir")" ]];then
         return
       fi
     done
   fi
   curdir=$(_sd_cl_get_dir)
-  if [ "$SD_CL_RANKING_METHOD" -eq 2 ];then
+  if [[ "$SD_CL_RANKING_METHOD" -eq 2 ]];then
     local n=${SD_CL_RANKING_N_CMD}
   else
     local n=${SD_CL_RANKING_N_CD}
   fi
   _sd_cl_check_file "${SD_CL_RANKING_FILE}"
   local rank=$(grep -- " ${curdir}$" "${SD_CL_RANKING_FILE}"|cut -d" " -f1)
-  if [ -z "$rank" ];then
+  if [[ -z "$rank" ]];then
     echo "$n $curdir" >> "${SD_CL_RANKING_FILE}"
   else
     local rd=$(sed "s|${rank} ${curdir}$|$((rank+n)) ${curdir}|" "${SD_CL_RANKING_FILE}"|sort -rn)
@@ -856,7 +856,7 @@ _sd_cl_ranking () {
   echo $trial > "${SD_CL_RANKING_TRIAL_FILE}"
 }
 
-if [ "$SD_CL_RANKING_METHOD" -eq 2 ];then
+if [[ "$SD_CL_RANKING_METHOD" -eq 2 ]];then
   if ! echo "$PROMPT_COMMAND"|grep -q _sd_cl_ranking;then
     PROMPT_COMMAND="${PROMPT_COMMAND:+${PROMPT_COMMAND};}_sd_cl_ranking"
   fi
@@ -867,7 +867,7 @@ fi
 _wrap_cd () {
   local opt=()
   while :;do
-    if [ "$1" = "-L" ] || [ "$1" = "-P" ] || [ "$1" = "-e" ] || [ "$1" = "-@" ];then
+    if [[ "$1" = "-L" || "$1" = "-P" || "$1" = "-e" || "$1" = "-@" ]];then
       opt=("${opt[@]}" "$1")
       shift
     else
@@ -875,17 +875,17 @@ _wrap_cd () {
     fi
   done
   local dir="$*"
-  if [ -z "$dir" ];then
-    if [ "$(pwd)" = "$HOME" ];then
+  if [[ -z "$dir" ]];then
+    if [[ "$(pwd)" = "$HOME" ]];then
       return
     else
       dir="$HOME"
     fi
-  elif [ "$dir" = "-" ];then
+  elif [[ "$dir" = "-" ]];then
     cl -b 0
     return
   else
-    if [ -f "$dir" ];then
+    if [[ -f "$dir" ]];then
       dir=$(dirname "$dir")
     fi
   fi
@@ -894,7 +894,7 @@ _wrap_cd () {
 
 # go back/forward
 bd () {
-  if [ "$#" -eq 0 ];then
+  if [[ "$#" -eq 0 ]];then
     cl -b 0
   else
     cl -b "$@"
@@ -902,7 +902,7 @@ bd () {
 }
 
 fd () {
-  if [ "$#" -eq 0 ];then
+  if [[ "$#" -eq 0 ]];then
     cl -f 0
   else
     cl -f "$@"
@@ -915,26 +915,26 @@ up () {
 # }}}
 
 # Set cd {{{
-if [ -n "$ZSH_VERSION" ];then
-  if [ "$SD_CL_ISCDWRAP" -eq 1 ];then
+if [[ -n "$ZSH_VERSION" ]];then
+  if [[ "$SD_CL_ISCDWRAP" -eq 1 ]];then
     cd () {
       _wrap_cd "$@"
     }
-  elif [ "$SD_CL_ISPOSTCD" -eq 1 ];then
+  elif [[ "$SD_CL_ISPOSTCD" -eq 1 ]];then
     chpwd () {
       _sd_cl_post_cd
     }
   fi
 else
-  if [ "$SD_CL_ISCDWRAP" -eq 1 ];then
+  if [[ "$SD_CL_ISCDWRAP" -eq 1 ]];then
     cd () {
       _wrap_cd "$@"
     }
-  elif [ "$SD_CL_ISPOSTCD" -eq 1 ];then
+  elif [[ "$SD_CL_ISPOSTCD" -eq 1 ]];then
     cd () {
       builtin cd "$@"
       local ret=$?
-      if [ $ret -eq 0 ];then
+      if [[ $ret -eq 0 ]];then
         _sd_cl_post_cd
       fi
       return $ret
@@ -953,7 +953,7 @@ cdpwd () {
 cdlink () {
   local dir="$*"
   local link=$(readlink -n "$dir")
-  if [ -n "$link" ];then
+  if [[ -n "$link" ]];then
     dir="$link"
   fi
   _wrap_cd -P "$dir"

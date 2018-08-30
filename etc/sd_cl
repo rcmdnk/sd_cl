@@ -325,7 +325,7 @@ cl () {
         return $_SD_CL_ERROR_INVALID_ARGUMENT
         ;;
       * )
-        if expr "$1" : "[0-9]*" >/dev/null;then
+        if (($1+1)) >&/dev/null;then
           n=$1
         else
           dir="$*"
@@ -487,7 +487,7 @@ cl () {
   done
 
   if [ -n "$n" ];then
-    if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "${#dirs[@]}" ];then
+    if ! ((n+1)) >&/dev/null || [ "$n" -ge "${#dirs[@]}" ];then
       echo "$n is not valid number."
       echo "Enter [0-$((${#dirs[@]}-1))]"
       return $_SD_CL_ERROR_INVALID_N
@@ -532,7 +532,7 @@ cl () {
         if [ -z "$i" ];then
           return
         fi
-        if ! expr "$i" : '[0-9]*' >/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
+        if ! ((i+1)) >&/dev/null || [ "$i" -ge "${#dirs[@]}" ];then
           echo "$i is not valid."
           echo "Enter [0-$((${#dirs[@]}-1))]"
           return $_SD_CL_ERROR_INVALID_INPUT
@@ -799,17 +799,11 @@ _sd_cl_ranking_update () {
   _sd_cl_check_file "${SD_CL_RANKING_FILE}"
   _sd_cl_check_file "${SD_CL_RANKING_TRIAL_FILE}"
   local trial="$(cat "${SD_CL_RANKING_TRIAL_FILE}")"
-  if ! expr "$trial" : "[0-9]*" >/dev/null;then
-    trial=0
-  fi
+  ((trial+1)) >&/dev/null || trial=0
   local dirs=()
   local line
-  while read -r line;do
-    local rank="$(echo "$line"|cut -d' ' -f1)"
-    local dir="$(echo "$line"|cut -d' ' -f2-)"
-    if ! expr "$rank" : "[0-9]*" >/dev/null;then
-      continue
-    fi
+  while read -r rank dir;do
+    ((rank+1)) >&/dev/null || continue
     rank=$((rank-trial))
     if [ "$rank" -le 0 ];then
       continue
@@ -854,7 +848,7 @@ _sd_cl_ranking () {
 
   _sd_cl_check_file "${SD_CL_RANKING_TRIAL_FILE}"
   local trial="$(cat "${SD_CL_RANKING_TRIAL_FILE}")"
-  if ! expr "$trial" : "[0-9]*" >/dev/null;then
+  if ! ((trial+1)) >&/dev/null;then
     trial=1
   else
     ((trial++))

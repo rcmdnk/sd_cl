@@ -198,9 +198,11 @@ sd () {
   while [[ $# -gt 0 ]];do
     case $1 in
       "-e" ) edit=1;;
+      "-C" ) cleardir=1;;
       "-c" ) file=${SD_CL_LASTDIR_FILE};;
       "-p" ) file=${SD_CL_PREDEF_FILE};;
-      "-C" ) cleardir=1;;
+      "-w" ) file=${SD_CL_WINDOW_FILE};;
+      "-r" ) file=${SD_CL_RANKING_FILE};;
       "-L" ) echo "$_SD_CL_LICENSE"; return;;
       "-h" )
         echo "$help"

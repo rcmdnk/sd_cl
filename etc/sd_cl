@@ -360,7 +360,11 @@ cl () {
 
   # Edit
   if [[ "$edit" -eq 1 ]];then
-    _sd_cl_edit_file "$file"
+    if [[ -n "$file" ]];then
+      _sd_cl_edit_file "$file"
+    else
+      echo "$mode mode doesn't have a file"
+    fi
     return
   fi
 
@@ -448,6 +452,10 @@ cl () {
     }
   fi
   _cl_get_dirs
+  local ret=$?
+  if [ $ret -ne 0 ];then
+    return $ret
+  fi
 
   # Check dirs
   if [[ "${#_SD_CL_DIRS[@]}" -eq 0 ]];then

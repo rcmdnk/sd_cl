@@ -80,7 +80,8 @@ _SD_CL_DIRS=()
 # support functions {{{
 _sd_cl_pre_cd () {
   local curdir=$(pwd)
-  if [[ "$curdir" != "$(_sd_cl_get_n 0 "${_SD_CL_BD_LIST[@]}")" ]];then
+  [ -z "$ZSH_VERSION" ] || emulate -L ksh
+  if [[ "$curdir" != "${_SD_CL_BD_LIST[0]}" ]];then
     _SD_CL_FD_LIST=()
     _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
   fi
@@ -155,24 +156,6 @@ _sd_cl_check_dir () {
   else
     echo "$1: No such a directory"
     return $_SD_CL_ERROR_NO_SUCH_DIRECTORY
-  fi
-}
-
-_sd_cl_get_n () {
-  local n=$1
-  local all=$2
-  if [[ -n "$n" ]];then
-    shift
-    if [ "$all" = "_GET_ALL_" ];then
-      while [ "$n" -ge 0 ];do
-        shift
-        ((n--))
-      done
-      echo "$*"
-    else
-      ((n++))
-      eval echo \$${n}
-    fi
   fi
 }
 
@@ -267,6 +250,9 @@ sd () {
 }
 
 cl () {
+  # Zsh array fix
+  [[ -z "$ZSH_VERSION" ]] || emulate -L ksh
+
   # Set default file
   local file="${SD_CL_LASTDIR_FILE}"
 
@@ -485,7 +471,6 @@ cl () {
       line="=$line"
       ((i++))
     done
-    local d
     local out_cmd="${PAGER:-less}"
     if [[ -t 1 ]];then
       local out_cmd=${PAGER:-less}
@@ -496,20 +481,21 @@ cl () {
       echo "$head"
       echo "$line"
       i=0
+      local d
       for d in "${_SD_CL_DIRS[@]}";do
         if [[ "$mode" = window ]];then
           local info=($d)
-          local window=$(_sd_cl_get_n 0 "${info[@]}")
-          local pane=$(_sd_cl_get_n 1 "${info[@]}")
-          local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 2 "${info[@]}")")
-          printf "%6d  %6d  %4d  %s\\n" "$i" "$window" "$pane" "$dir"
+          local window=${info[0]}
+          local pane=${info[1]}
+          d=$(_sd_cl_get_dir ${info[*]:2})
+          printf "%6d  %6d  %4d  %s\\n" "$i" "$window" "$pane" "$d"
         elif [[ "$mode" = ranking ]];then
           local info=($d)
-          local rp=$(_sd_cl_get_n 0 "${info[@]}")
-          local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 1 "${info[@]}")")
-          printf "%6d  %12d  %s\\n" "$i" "$rp" "$dir"
+          local rp=${info[0]}
+          d=$(_sd_cl_get_dir ${info[*]:1})
+          printf "%6d  %12d  %s\\n" "$i" "$rp" "$d"
         else
-          printf "%6d  %s\\n" $i "$(_sd_cl_get_dir "${d}")"
+          printf "%6d  %s\\n" $i "$(_sd_cl_get_dir "$d")"
         fi
         ((i++))
       done
@@ -536,11 +522,11 @@ cl () {
       echo "Enter [0-$((${#_SD_CL_DIRS[@]}-1))]"
       return $_SD_CL_ERROR_INVALID_N
     fi
-    _SD_CL_DIRS=("$(_sd_cl_get_n "$n" "${_SD_CL_DIRS[@]}")")
+    _SD_CL_DIRS=("${_SD_CL_DIRS[$n]}")
   fi
 
   if [[ "${#_SD_CL_DIRS[@]}" -eq 1 && "$mode" != vim ]];then
-    dir="$(_sd_cl_get_n 0 "${_SD_CL_DIRS[@]}")"
+    dir=${_SD_CL_DIRS[0]}
   else
     # Set selection tool
     local selection=""
@@ -576,7 +562,7 @@ cl () {
         local d
         local i=$((${#_SD_CL_DIRS[@]}-1))
         while [[ $i -ge 0 ]];do
-          printf "%3d: %s\\n" $i "$(_sd_cl_get_n $i "${_SD_CL_DIRS[@]}")"
+          printf "%3d: %s\\n" $i "${_SD_CL_DIRS[$i]}"
           ((i--))
         done
         printf "\\nChoose directory number: "
@@ -589,7 +575,7 @@ cl () {
           echo "Enter [0-$((${#_SD_CL_DIRS[@]}-1))]"
           return $_SD_CL_ERROR_INVALID_INPUT
         fi
-        dir="$(_sd_cl_get_n "$i" "${_SD_CL_DIRS[@]}")"
+        dir="${_SD_CL_DIRS[$i]}"
       fi
       if [[ -z "$dir" ]];then
         return

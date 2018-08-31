@@ -479,33 +479,41 @@ cl () {
     elif [[ "$mode" = ranking ]];then
       local head="Number  RankingPoint  Directory"
     fi
-    echo "$head"
     local line=""
     local i=0
     while [ $i -lt "${#head}" ];do
       line="=$line"
       ((i++))
     done
-    echo "$line"
     local d
-    i=0
-    for d in "${_SD_CL_DIRS[@]}";do
-      if [[ "$mode" = window ]];then
-        local info=($d)
-        local window=$(_sd_cl_get_n 0 "${info[@]}")
-        local pane=$(_sd_cl_get_n 1 "${info[@]}")
-        local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 2 "${info[@]}")")
-        printf "%6d  %6d  %4d  %s\\n" "$i" "$window" "$pane" "$dir"
-      elif [[ "$mode" = ranking ]];then
-        local info=($d)
-        local rp=$(_sd_cl_get_n 0 "${info[@]}")
-        local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 1 "${info[@]}")")
-        printf "%6d  %12d  %s\\n" "$i" "$rp" "$dir"
-      else
-        printf "%6d  %s\\n" $i "$(_sd_cl_get_dir "${d}")"
-      fi
-      ((i++))
-    done
+    local out_cmd="${PAGER:-less}"
+    if [[ -t 1 ]];then
+      local out_cmd=${PAGER:-less}
+    else
+      local out_cmd=cat
+    fi
+    {
+      echo "$head"
+      echo "$line"
+      i=0
+      for d in "${_SD_CL_DIRS[@]}";do
+        if [[ "$mode" = window ]];then
+          local info=($d)
+          local window=$(_sd_cl_get_n 0 "${info[@]}")
+          local pane=$(_sd_cl_get_n 1 "${info[@]}")
+          local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 2 "${info[@]}")")
+          printf "%6d  %6d  %4d  %s\\n" "$i" "$window" "$pane" "$dir"
+        elif [[ "$mode" = ranking ]];then
+          local info=($d)
+          local rp=$(_sd_cl_get_n 0 "${info[@]}")
+          local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 1 "${info[@]}")")
+          printf "%6d  %12d  %s\\n" "$i" "$rp" "$dir"
+        else
+          printf "%6d  %s\\n" $i "$(_sd_cl_get_dir "${d}")"
+        fi
+        ((i++))
+      done
+    } | $out_cmd
     return 0
   fi
 

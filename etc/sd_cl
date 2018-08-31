@@ -478,29 +478,14 @@ cl () {
   local dirs_tmp=()
   local d
   for d in "${_SD_CL_DIRS[@]}";do
-    if [[ "$SD_CL_SHOW_MORE_INFO" -eq 0 ]];then
-      if [[ "$mode" = window ]];then
-        d=$(echo "$d"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
-      elif [[ "$mode" = ranking ]];then
-        d=$(echo "$d"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
-      fi
-    fi
-    if [[ -n "$dir" ]];then
-      if ! eval echo "$d" |eval grep -q -- "$dir";then
-        continue
-      fi
-    fi
+    [[ -n "$dir" && ! "$d" =~ $dir ]] && continue
     dirs_tmp=("${dirs_tmp[@]}" "$d")
   done
   if [[ "${#dirs_tmp[@]}" -eq 0 ]];then
     echo "No such a directory is stored for $mode: ${dir}"
     return $_SD_CL_ERROR_NOT_STORED
   fi
-
-  _SD_CL_DIRS=()
-  for d in "${dirs_tmp[@]}";do
-    _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
-  done
+  _SD_CL_DIRS=("${dirs_tmp[@]}")
 
   if [[ -n "$n" ]];then
     if ! ((n+1)) >&/dev/null || [[ "$n" -ge "${#_SD_CL_DIRS[@]}" ]];then
@@ -535,7 +520,15 @@ cl () {
 
     while :;do
       if [[ -n "$selection" ]];then
-        dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|eval "$selection")
+        if [[ "$SD_CL_SHOW_MORE_INFO" -eq 0 && ( "$mode" = window || "$mode" = ranking ) ]];then
+          if [[ "$mode" = window ]];then
+            dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}'|eval "$selection")
+          elif [[ "$mode" = ranking ]];then
+            dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}'|eval "$selection")
+          fi
+        else
+         dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|eval "$selection")
+        fi
       else
         local d
         local i=$((${#_SD_CL_DIRS[@]}-1))
@@ -649,19 +642,19 @@ if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
         '-v:: :->non'\
         '-h:: :->non'
       local ldf=""
-      if echo "$state"|grep -q non;then
+      if [[ "$state" =~ non ]];then
         return
-      elif echo "$state"|grep -q predef;then
+      elif [[ "$state" =~ predef ]];then
         ldf=${SD_CL_PREDEF_FILE}
-      elif echo "$state"|grep -q window;then
+      elif [[ "$state" =~ window ]];then
         ldf=${SD_CL_WINDOW_FILE}
-      elif echo "$state"|grep -q ranking;then
+      elif [[ "$state" =~ ranking ]];then
         ldf=${SD_CL_RANKING_FILE}
-      elif echo "$state"|grep -q back;then
+      elif [[ "$state" =~ back ]];then
         ldf=back
-      elif echo "$state"|grep -q forward;then
+      elif [[ "$state" =~ forward ]];then
         ldf=forward
-      elif echo "$state"|grep -q lastdir;then
+      elif [[ "$state" =~ lastdir ]];then
         ldf=${SD_CL_LASTDIR_FILE}
       else
         ldf=all

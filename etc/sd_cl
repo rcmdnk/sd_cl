@@ -74,6 +74,7 @@ SD_CL_ISCDWRAP=${SD_CL_ISCDWRAP:-1}
 # Other variables {{{
 _SD_CL_BD_LIST=()
 _SD_CL_FD_LIST=()
+_SD_CL_DIRS=()
 # }}}
 
 # support functions {{{
@@ -166,6 +167,14 @@ _sd_cl_get_n () {
   fi
 }
 
+_sd_cl_read_dirs () {
+  local file="$1"
+  _sd_cl_check_file "$file"
+  local orig_ifs=$IFS
+  IFS=$'\n'
+  _SD_CL_DIRS=($(cat "$file"))
+  IFS=$orig_ifs
+}
 # }}}
 
 # main functions {{{
@@ -298,7 +307,6 @@ cl () {
   local cleardir=0
   local n=""
   local dir=""
-  local dirs=()
   local selection_tools="$SD_CL_TOOL"
 
   # Get arguments
@@ -363,19 +371,19 @@ cl () {
     fi
     if [[ "$mode" = window && -n "$STY" ]];then
       _cl_get_dirs () {
-        _sd_cl_check_file "$file"
-        dirs=()
         local windows=$(screen -Q windows)
         local ret=$?
         if [[ $ret -eq 0 ]];then
           local wininfo
           local i=0
           local d
+           _SD_CL_DIRS=()
+           _sd_cl_check_file "$file"
           for wininfo in $windows;do
             if [[ $i -eq 0 ]];then
               d=$(grep "^$(echo "${wininfo%\*}"|sed 's/-//') " "$file")
               if [[ -n "$d" ]];then
-                dirs=("${dirs[@]}" "$d")
+                _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
               fi
             fi
             ((i++))
@@ -383,68 +391,66 @@ cl () {
               i=0
             fi
           done
-          for d in "${dirs[@]}";do
+          for d in "${_SD_CL_DIRS[@]}";do
             echo "$d"
           done > "$file"
         else
           # simply read file if screen command failed
-          local d
-          while read -r d;do
-            dirs=("${dirs[@]}" "$d")
-          done < "$file"
+          _sd_cl_read_dirs "$file"
         fi
       }
     elif [[ "$mode" = window && -n "$TMUX" ]];then
       _cl_get_dirs () {
-        _sd_cl_check_file "$file"
         local windows=$(tmux lsp -s -F '#I.#P')
-        local wininfo
-        local i=0
-        local d
-        for wininfo in $windows;do
-          d=$(grep "^${wininfo/,/ } " "$file")
-          if [[ -n "$d" ]];then
-            dirs=("${dirs[@]}" "$d")
-          fi
-        done
-        for d in "${dirs[@]}";do
-          echo "$d"
-        done > "$file"
+        local ret=$?
+        if [[ $ret -eq 0 ]];then
+          local wininfo
+          local i=0
+          local d
+          _sd_cl_check_file "$file"
+          for wininfo in $windows;do
+            d=$(grep "^${wininfo/,/ } " "$file")
+            if [[ -n "$d" ]];then
+              _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
+            fi
+          done
+          for d in "${_SD_CL_DIRS[@]}";do
+            echo "$d"
+          done > "$file"
+        else
+          # simply read file if tmux command failed
+          _sd_cl_read_dirs "$file"
+        fi
       }
     else
       _cl_get_dirs () {
-        dirs=()
-        local d
-        _sd_cl_check_file "$file"
-        while read -r d;do
-          dirs=("${dirs[@]}" "$d")
-        done < "$file"
+        _sd_cl_read_dirs "$file"
       }
     fi
   elif [[ "$mode" = vim ]];then
     _cl_get_dirs () {
-      dirs=()
+      _SD_CL_DIRS=()
       for d in *;do
         if [[ ! -d "$d" ]];then
           continue
         fi
-        dirs=("${dirs[@]}" "$d")
+        _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
       done
-      dirs=(".." "${dirs[@]}")
+      _SD_CL_DIRS=(".." "${_SD_CL_DIRS[@]}")
     }
   elif [[ "$mode" = back ]];then
     _cl_get_dirs () {
-      dirs=("${_SD_CL_BD_LIST[@]}")
+      _SD_CL_DIRS=("${_SD_CL_BD_LIST[@]}")
     }
   elif [[ "$mode" = forward ]];then
     _cl_get_dirs () {
-      dirs=("${_SD_CL_FD_LIST[@]}")
+      _SD_CL_DIRS=("${_SD_CL_FD_LIST[@]}")
     }
   fi
   _cl_get_dirs
 
   # Check dirs
-  if [[ "${#dirs[@]}" -eq 0 ]];then
+  if [[ "${#_SD_CL_DIRS[@]}" -eq 0 ]];then
     echo "No directory is stored for $mode"
     return
   fi
@@ -453,7 +459,7 @@ cl () {
   if [[ "$list" -eq 1 ]];then
     local d
     local i=0
-    for d in "${dirs[@]}";do
+    for d in "${_SD_CL_DIRS[@]}";do
       printf "%3d %s\\n" $i "$(_sd_cl_get_dir "${d}")"
       ((i++))
     done
@@ -463,7 +469,7 @@ cl () {
   # Cleanup list
   local dirs_tmp=()
   local d
-  for d in "${dirs[@]}";do
+  for d in "${_SD_CL_DIRS[@]}";do
     if [[ "$SD_CL_SHOW_MORE_INFO" -eq 0 ]];then
       if [[ "$mode" = window ]];then
         d=$(echo "$d"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
@@ -483,22 +489,22 @@ cl () {
     return $_SD_CL_ERROR_NOT_STORED
   fi
 
-  dirs=()
+  _SD_CL_DIRS=()
   for d in "${dirs_tmp[@]}";do
-    dirs=("${dirs[@]}" "$d")
+    _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
   done
 
   if [[ -n "$n" ]];then
-    if ! ((n+1)) >&/dev/null || [[ "$n" -ge "${#dirs[@]}" ]];then
+    if ! ((n+1)) >&/dev/null || [[ "$n" -ge "${#_SD_CL_DIRS[@]}" ]];then
       echo "$n is not valid number."
-      echo "Enter [0-$((${#dirs[@]}-1))]"
+      echo "Enter [0-$((${#_SD_CL_DIRS[@]}-1))]"
       return $_SD_CL_ERROR_INVALID_N
     fi
-    dirs=("$(_sd_cl_get_n "$n" "${dirs[@]}")")
+    _SD_CL_DIRS=("$(_sd_cl_get_n "$n" "${_SD_CL_DIRS[@]}")")
   fi
 
-  if [[ "${#dirs[@]}" -eq 1 && "$mode" != vim ]];then
-    dir="$(_sd_cl_get_n 0 "${dirs[@]}")"
+  if [[ "${#_SD_CL_DIRS[@]}" -eq 1 && "$mode" != vim ]];then
+    dir="$(_sd_cl_get_n 0 "${_SD_CL_DIRS[@]}")"
   else
     # Set selection tool
     local selection=""
@@ -521,12 +527,12 @@ cl () {
 
     while :;do
       if [[ -n "$selection" ]];then
-        dir=$(for d in "${dirs[@]}";do echo "$d";done|eval "$selection")
+        dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|eval "$selection")
       else
         local d
-        local i=$((${#dirs[@]}-1))
+        local i=$((${#_SD_CL_DIRS[@]}-1))
         while [[ $i -ge 0 ]];do
-          printf "%3d: %s\\n" $i "$(_sd_cl_get_n $i "${dirs[@]}")"
+          printf "%3d: %s\\n" $i "$(_sd_cl_get_n $i "${_SD_CL_DIRS[@]}")"
           ((i--))
         done
         printf "\\nChoose directory number: "
@@ -534,12 +540,12 @@ cl () {
         if [[ -z "$i" ]];then
           return
         fi
-        if ! ((i+1)) >&/dev/null || [[ "$i" -ge "${#dirs[@]}" ]];then
+        if ! ((i+1)) >&/dev/null || [[ "$i" -ge "${#_SD_CL_DIRS[@]}" ]];then
           echo "$i is not valid."
-          echo "Enter [0-$((${#dirs[@]}-1))]"
+          echo "Enter [0-$((${#_SD_CL_DIRS[@]}-1))]"
           return $_SD_CL_ERROR_INVALID_INPUT
         fi
-        dir="$(_sd_cl_get_n "$i" "${dirs[@]}")"
+        dir="$(_sd_cl_get_n "$i" "${_SD_CL_DIRS[@]}")"
       fi
       if [[ -z "$dir" ]];then
         return

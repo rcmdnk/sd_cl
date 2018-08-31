@@ -160,10 +160,19 @@ _sd_cl_check_dir () {
 
 _sd_cl_get_n () {
   local n=$1
+  local all=$2
   if [[ -n "$n" ]];then
     shift
-    ((n++))
-    eval echo \$${n}
+    if [ "$all" = "_GET_ALL_" ];then
+      while [ "$n" -ge 0 ];do
+        shift
+        ((n--))
+      done
+      echo "$*"
+    else
+      ((n++))
+      eval echo \$${n}
+    fi
   fi
 }
 
@@ -384,16 +393,15 @@ cl () {
            _SD_CL_DIRS=()
            _sd_cl_check_file "$file"
           for wininfo in $windows;do
-            if [[ $i -eq 0 ]];then
-              d=$(grep "^$(echo "${wininfo%\*}"|sed 's/-//') " "$file")
+            if [[ $((i%3)) -eq 0 ]];then
+              wininfo="${wininfo%\*}"
+              wininfo="${wininfo%-}"
+              d=$(grep "^${wininfo} 0" "$file")
               if [[ -n "$d" ]];then
                 _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
               fi
             fi
             ((i++))
-            if [[ $i -eq 3 ]];then
-              i=0
-            fi
           done
           for d in "${_SD_CL_DIRS[@]}";do
             echo "$d"
@@ -465,10 +473,37 @@ cl () {
 
   # List up
   if [[ "$list" -eq 1 ]];then
-    local d
+    local head="Number  Directory"
+    if [[ "$mode" = window ]];then
+      local head="Number  Window  Pane  Directory"
+    elif [[ "$mode" = ranking ]];then
+      local head="Number  RankingPoint  Directory"
+    fi
+    echo "$head"
+    local line=""
     local i=0
+    while [ $i -lt "${#head}" ];do
+      line="=$line"
+      ((i++))
+    done
+    echo "$line"
+    local d
+    i=0
     for d in "${_SD_CL_DIRS[@]}";do
-      printf "%3d %s\\n" $i "$(_sd_cl_get_dir "${d}")"
+      if [[ "$mode" = window ]];then
+        local info=($d)
+        local window=$(_sd_cl_get_n 0 "${info[@]}")
+        local pane=$(_sd_cl_get_n 1 "${info[@]}")
+        local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 2 "${info[@]}")")
+        printf "%6d  %6d  %4d  %s\\n" "$i" "$window" "$pane" "$dir"
+      elif [[ "$mode" = ranking ]];then
+        local info=($d)
+        local rp=$(_sd_cl_get_n 0 "${info[@]}")
+        local dir=$(_sd_cl_get_dir "$(_sd_cl_get_n 1 "${info[@]}")")
+        printf "%6d  %12d  %s\\n" "$i" "$rp" "$dir"
+      else
+        printf "%6d  %s\\n" $i "$(_sd_cl_get_dir "${d}")"
+      fi
       ((i++))
     done
     return 0

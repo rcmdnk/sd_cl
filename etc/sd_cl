@@ -459,18 +459,15 @@ cl () {
 
   # List up
   if [[ "$list" -eq 1 ]];then
-    local head="Number  Directory"
+    local head="Number|Directory"
+    local line="======|========="
     if [[ "$mode" = window ]];then
-      local head="Number  Window  Pane  Directory"
+      local head="Number|Window|Pane|Directory"
+      local line="======|======|====|========="
     elif [[ "$mode" = ranking ]];then
-      local head="Number  RankingPoint  Directory"
+      local head="Number|RankingPoint|Directory"
+      local line="======|============|========="
     fi
-    local line=""
-    local i=0
-    while [ $i -lt "${#head}" ];do
-      line="=$line"
-      ((i++))
-    done
     local out_cmd="${PAGER:-less}"
     if [[ -t 1 ]];then
       local out_cmd=${PAGER:-less}
@@ -488,14 +485,14 @@ cl () {
           local window=${info[0]}
           local pane=${info[1]}
           d=$(_sd_cl_get_dir ${info[*]:2})
-          printf "%6d  %6d  %4d  %s\\n" "$i" "$window" "$pane" "$d"
+          printf "%6d|%6d|%4d|%s\\n" "$i" "$window" "$pane" "$d"
         elif [[ "$mode" = ranking ]];then
           local info=($d)
           local rp=${info[0]}
           d=$(_sd_cl_get_dir ${info[*]:1})
-          printf "%6d  %12d  %s\\n" "$i" "$rp" "$d"
+          printf "%6d|%12d|%s\\n" "$i" "$rp" "$d"
         else
-          printf "%6d  %s\\n" $i "$(_sd_cl_get_dir "$d")"
+          printf "%6d|%s\\n" $i "$(_sd_cl_get_dir "$d")"
         fi
         ((i++))
       done

@@ -241,7 +241,7 @@ sd () {
     return $?
   else
     _sd_cl_check_file "$file"
-    local pre_list="$(grep -v "^${dir}$" < "$file"|grep -v '^\s*$'|head -n"$((SD_CL_N-1))")"
+    local pre_list="$(grep -v "^${dir}$" "$file"|grep -v '^\s*$'|head -n"$((SD_CL_N-1))")"
     echo "$dir" > "$file"
     if [[ -n "$pre_list" ]];then
       echo "$pre_list" >> "$file"
@@ -668,23 +668,16 @@ if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
         '-v:: :->non'\
         '-h:: :->non'
       local ldf=""
-      if [[ "$state" =~ non ]];then
-        return
-      elif [[ "$state" =~ predef ]];then
-        ldf=${SD_CL_PREDEF_FILE}
-      elif [[ "$state" =~ window ]];then
-        ldf=${SD_CL_WINDOW_FILE}
-      elif [[ "$state" =~ ranking ]];then
-        ldf=${SD_CL_RANKING_FILE}
-      elif [[ "$state" =~ back ]];then
-        ldf=back
-      elif [[ "$state" =~ forward ]];then
-        ldf=forward
-      elif [[ "$state" =~ lastdir ]];then
-        ldf=${SD_CL_LASTDIR_FILE}
-      else
-        ldf=all
-      fi
+      case "$state" in
+        *non*)return;;
+        *predef* )ldf=${SD_CL_PREDEF_FILE};;
+        *window* )ldf=${SD_CL_WINDOW_FILE};;
+        *ranking*)ldf=${SD_CL_RANKING_FILE};;
+        *back*   )ldf=back;;
+        *forward*)ldf=forward;;
+        *lastdir*)ldf=${SD_CL_LASTDIR_FILE};;
+        *)ldf=all;;
+      esac
       local orig_ifs=$IFS
       IFS=$'\n'
       if [[ "$ldf" = "all" ]];then
@@ -701,7 +694,7 @@ if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
       elif [[ "$ldf" = forward ]];then
         compadd "${_SD_CL_FD_LIST[@]}"
       elif [[ -n "$ldf" ]];then
-        if echo "$state"|grep -q window;then
+        if [[ "$state" = *window* ]];then
           compadd $(cat $ldf|cut -d' ' -f 3-)
         elif echo "$state"|grep -q ranking;then
           compadd $(cat $ldf|cut -d' ' -f 2-)

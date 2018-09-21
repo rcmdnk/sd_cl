@@ -79,11 +79,11 @@ _SD_CL_DIRS=()
 
 # support functions {{{
 _sd_cl_pre_cd () {
-  local curdir=$(pwd)
+  local curdir=$PWD
   [ -z "$ZSH_VERSION" ] || emulate -L ksh
   if [[ "$curdir" != "${_SD_CL_BD_LIST[0]}" ]];then
     _SD_CL_FD_LIST=()
-    _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
+    _SD_CL_BD_LIST=("$PWD" "${_SD_CL_BD_LIST[@]}")
   fi
 }
 
@@ -143,7 +143,7 @@ _sd_cl_get_dir () {
   if [[ $# -ge 1 ]];then
     local dir="$1"
   else
-    local dir="$(pwd)"
+    local dir="$PWD"
   fi
   echo "$(echo "$dir"|sed "s|^$HOME|~|")"
 }
@@ -590,7 +590,7 @@ cl () {
   if [[ "$mode" = back ]];then
     local dirs_tmp=("${_SD_CL_BD_LIST[@]}")
     _SD_CL_BD_LIST=()
-    _SD_CL_FD_LIST=("$(pwd)" "${_SD_CL_FD_LIST[@]}")
+    _SD_CL_FD_LIST=("$PWD" "${_SD_CL_FD_LIST[@]}")
     local store=0
     for d in "${dirs_tmp[@]}";do
       if [[ "$store" -eq 1 ]];then
@@ -610,7 +610,7 @@ cl () {
   if [[ "$mode" = forward ]];then
     local dirs_tmp=("${_SD_CL_FD_LIST[@]}")
     _SD_CL_FD_LIST=()
-    _SD_CL_BD_LIST=("$(pwd)" "${_SD_CL_BD_LIST[@]}")
+    _SD_CL_BD_LIST=("$PWD" "${_SD_CL_BD_LIST[@]}")
     local store=0
     for d in "${dirs_tmp[@]}";do
       if [[ "$store" -eq 1 ]];then
@@ -859,7 +859,7 @@ _sd_cl_ranking () {
     local exclude=($(echo "$SD_CL_RANKING_EXCLUDE"))
     IFS=$orig_ifs
     local dir
-    local curdir="$(pwd)"
+    local curdir="$PWD"
     for dir in "${exclude[@]}";do
       if [[ "$curdir" = "$(eval echo "$dir")" ]];then
         return
@@ -911,7 +911,7 @@ _wrap_cd () {
   done
   local dir="$*"
   if [[ -z "$dir" ]];then
-    if [[ "$(pwd)" = "$HOME" ]];then
+    if [[ "$PWD" = "$HOME" ]];then
       return
     else
       dir="$HOME"

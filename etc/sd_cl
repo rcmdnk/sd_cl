@@ -89,6 +89,10 @@ _sd_cl_pre_cd () {
 
 _sd_cl_cd () {
   _sd_cl_pre_cd
+  _sd_cl_cd_core "$@"
+}
+
+_sd_cl_cd_core () {
   eval builtin cd "$@"
   local ret=$?
   if [[ $ret -eq 0 ]];then
@@ -603,7 +607,7 @@ cl () {
         _SD_CL_FD_LIST=("$d" "${_SD_CL_FD_LIST[@]}")
       fi
     done
-    builtin cd "$dir"
+    _sd_cl_cd_core "$dir"
     return
   fi
 
@@ -623,7 +627,7 @@ cl () {
         _SD_CL_BD_LIST=("$d" "${_SD_CL_BD_LIST[@]}")
       fi
     done
-    builtin cd "$dir"
+    _sd_cl_cd_core "$dir"
     return
   fi
 
@@ -960,12 +964,7 @@ else
     }
   elif [[ "$SD_CL_ISPOSTCD" -eq 1 ]];then
     cd () {
-      builtin cd "$@"
-      local ret=$?
-      if [[ $ret -eq 0 ]];then
-        _sd_cl_post_cd
-      fi
-      return $ret
+      _sd_cl_cd_core "$@"
     }
   fi
 fi

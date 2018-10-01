@@ -163,6 +163,7 @@ Commands to manage stored directories.
     Arguments:
        -e          Edit directory list file
        -C          Clear directories
+       -H          Use the directory history file (~/.config/sd_cl/history)
        -c          Use the last directory file (~/.config/sd_cl/lastdir)
        -p          Use the pre-defiend dirctory file (~/.config/sd_cl/predef)
        -L          Print license and quit
@@ -187,6 +188,7 @@ Commands to change the directory to the stored one.
        -C          Clear directories
        <number>    Move to <number>-th last directory
        -n <number> Move to <number>-th last directory
+       -H          Move to the directory in history (~/.config/sd_cl/history)
        -p          Move to pre-defiend dirctory in ~/.config/sd_cl/predef
        -w          Move to other window's (screen/tmux) dirctory in ~/.config/sd_cl/window
        -r          Move to ranking directory in ~/.config/sd_cl/ranking
@@ -281,6 +283,22 @@ The list is stored in `SD_CL_LASTDIR_FILE`.
 `cl` calls this list by default.
 
 The number of directories stored in the list is defined by `SD_CL_N`.
+
+#### Directory history list
+
+If you use `-H` for `sd` or `cl`, it uses directory history,
+stored in `SD_CL_HISTORY_FILE`.
+
+It is updated every `cd`.
+
+Set `SD_CL_HISTORY=0` to disable to update the history.
+
+
+Set `SD_CL_HISTORY_EXCLUDE=/a/b/c,/d/e/f` to exclude directories from hte list.
+The default value is `$HOME`.
+
+Set `SD_CL_HISTORY_MAX` to set max number of directories in the history.
+The default is 1000.
 
 #### Pre-defined directory list
 

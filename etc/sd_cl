@@ -46,9 +46,15 @@ SD_CL_SHOW_MORE_INFO=${SD_CL_SHOW_MORE_INFO:-0}
 # Directory store file
 SD_CL_CONFIG_DIR=${SD_CL_CONFIG_DIR:-$HOME/.config/sd_cl}
 SD_CL_LASTDIR_FILE=${SD_CL_LASTDIR_FILE:-${SD_CL_CONFIG_DIR}/lastdir}
+SD_CL_HISTORY_FILE=${SD_CL_HISTORY_FILE:-${SD_CL_CONFIG_DIR}/history}
 SD_CL_PREDEF_FILE=${SD_CL_PREDEF_FILE:-${SD_CL_CONFIG_DIR}/predef}
 SD_CL_WINDOW_FILE=${SD_CL_WINDOW_FILE:-${SD_CL_CONFIG_DIR}/window}
 SD_CL_RANKING_FILE=${SD_CL_RANKING_FILE:-${SD_CL_CONFIG_DIR}/ranking}
+
+# Simple history
+SD_CL_HISTORY=${SD_CL_HISTORY:-1}
+SD_CL_HISTORY_EXCLUDE=${SD_CL_HISTORY_EXCLUDE:-"$HOME"}
+SD_CL_HISTORY_MAX=${SD_CL_HISTORY_MAX:-10000}
 
 # Ranking method
 SD_CL_RANKING_METHOD=${SD_CL_RANKING_METHOD:-2}
@@ -104,6 +110,9 @@ _sd_cl_cd_core () {
 _sd_cl_post_cd () {
   if [[ "$SD_CL_RANKING_METHOD" -eq 1 ]];then
     _sd_cl_ranking
+  fi
+  if [[ "$SD_CL_HISTORY" -eq 1 ]];then
+    _sd_cl_history
   fi
   if [[ -z "$STY" && -z "$TMUX" ]];then
     return
@@ -186,6 +195,7 @@ sd () {
      -e          Edit directory list file
      -C          Clear directories
      -c          Use the last directory file ($SD_CL_LASTDIR_FILE, default)
+     -H          Use the directory history file ($SD_CL_HISTORY_FILE)
      -p          Use the pre-defiend dirctory file ($SD_CL_PREDEF_FILE)
      -w          Use the window dirctory file ($SD_CL_WINDOW_FILE)
      -r          Use the ranking directory file ($SD_CL_RANKING_FILE)
@@ -205,6 +215,7 @@ sd () {
       "-e" ) edit=1;;
       "-C" ) cleardir=1;;
       "-c" ) file=${SD_CL_LASTDIR_FILE};;
+      "-H" ) file=${SD_CL_HISTORY_FILE};;
       "-p" ) file=${SD_CL_PREDEF_FILE};;
       "-w" ) file=${SD_CL_WINDOW_FILE};;
       "-r" ) file=${SD_CL_RANKING_FILE};;
@@ -288,6 +299,7 @@ cl () {
      -C          Clear directories
      <number>    Move to <number>-th last directory
      -n <number> Move to <number>-th last directory
+     -H          Move to the directory in history ($SD_CL_HISTORY_FILE)
      -p          Move to pre-defiend dirctory in $SD_CL_PREDEF_FILE
      -w          Move to other window's (screen/tmux) dirctory in $SD_CL_WINDOW_FILE
      -r          Move to ranking directory in $SD_CL_RANKING_FILE
@@ -315,6 +327,7 @@ cl () {
       "-e" ) edit=1;;
       "-c" ) file=${SD_CL_LASTDIR_FILE};mode="lastdir";;
       "-n" ) n="$2"; shift;;
+      "-H" ) file=${SD_CL_HISTORY_FILE};mode="history";;
       "-p" ) file=${SD_CL_PREDEF_FILE};mode="predef";;
       "-w" ) file=${SD_CL_WINDOW_FILE};mode="window";;
       "-r" ) file=${SD_CL_RANKING_FILE};mode="ranking";;
@@ -664,6 +677,7 @@ if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
         '-C:: :->non'\
         '-n:: :->xxx'\
         '-N:: :->xxx'\
+        '-H:: :->history'\
         '-p:: :->predef'\
         '-w:: :->window'\
         '-r:: :->ranking'\
@@ -680,6 +694,7 @@ if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
         *back*   )ldf=back;;
         *forward*)ldf=forward;;
         *lastdir*)ldf=${SD_CL_LASTDIR_FILE};;
+        *history*)ldf=${SD_CL_HISTORY_FILE};;
         *)ldf=all;;
       esac
       local orig_ifs=$IFS
@@ -756,6 +771,7 @@ if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
       fi
 
       local ldf=${SD_CL_LASTDIR_FILE}
+      local hdf=${SD_CL_HISTORY_FILE}
       local pdf=${SD_CL_PREDEF_FILE}
       local wdf=${SD_CL_WINDOW_FILE}
       local rdf=${SD_CL_RANKING_FILE}
@@ -766,6 +782,7 @@ if [[ "$SD_CL_NOCOMPLETION" -eq 0 ]];then
       IFS=$'\n'
       case $prev in
         -c)_sd_cl_check_file "$ldf" && d=$(cat "$ldf");;
+        -H)_sd_cl_check_file "$hdf" && d=$(cat "$hdf");;
         -p)_sd_cl_check_file "$pdf" && d=$(cat "$pdf");;
         -w)_sd_cl_check_file "$ldf" && d=$(cut -d' ' -f3- <"$wdf");;
         -r)_sd_cl_check_file "$rdf" && d=$(cut -d' ' -f2- <"$rdf");;
@@ -826,6 +843,36 @@ elif [[ -n "$BASH_VERSION" ]];then
 fi
 # }}}
 
+# history {{{
+_sd_cl_history () {
+  if [[ -n "$SD_CL_HISTORY_EXCLUDE" ]];then
+    local orig_ifs=$IFS
+    IFS=","
+    local exclude=($(echo "$SD_CL_HISTORY_EXCLUDE"))
+    IFS=$orig_ifs
+    local dir
+    local curdir="$PWD"
+    for dir in "${exclude[@]}";do
+      if [[ "$curdir" = "$(eval echo "$dir")" ]];then
+        return
+      fi
+    done
+  fi
+  local curdir=$(_sd_cl_get_dir)
+  _sd_cl_check_file "${SD_CL_HISTORY_FILE}"
+  mv "${SD_CL_HISTORY_FILE}" "${SD_CL_HISTORY_FILE}.tmp"
+  echo "$curdir" > "${SD_CL_HISTORY_FILE}"
+  grep -v "^$curdir$" ${SD_CL_HISTORY_FILE}.tmp | head -n $((SD_CL_HISTORY_MAX-1)) >> "${SD_CL_HISTORY_FILE}"
+  rm -f "${SD_CL_HISTORY_FILE}.tmp"
+}
+
+if [[ "$SD_CL_RANKING_METHOD" -eq 2 ]];then
+  if ! echo "$PROMPT_COMMAND"|grep -q _sd_cl_ranking;then
+    PROMPT_COMMAND="${PROMPT_COMMAND:+${PROMPT_COMMAND};}_sd_cl_ranking"
+  fi
+fi
+# }}}
+
 # ranking {{{
 _sd_cl_ranking_update () {
   _sd_cl_check_file "${SD_CL_RANKING_FILE}"
@@ -863,7 +910,7 @@ _sd_cl_ranking () {
       fi
     done
   fi
-  curdir=$(_sd_cl_get_dir)
+  local curdir=$(_sd_cl_get_dir)
   if [[ "$SD_CL_RANKING_METHOD" -eq 2 ]];then
     local n=${SD_CL_RANKING_N_CMD}
   else

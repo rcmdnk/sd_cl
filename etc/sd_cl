@@ -557,20 +557,24 @@ cl () {
         break
       fi
     done
-    if [[ "$selection" = "sentaku" ]];then
-      selection="sentaku -s line"
-    fi
+    #if [[ "$selection" = "sentaku" ]];then
+    #  selection="sentaku -s line"
+    #fi
 
     while :;do
       if [[ -n "$selection" ]];then
+        local dirs="$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done)"
         if [[ "$SD_CL_SHOW_MORE_INFO" -eq 0 && ( "$mode" = window || "$mode" = ranking ) ]];then
           if [[ "$mode" = window ]];then
-            dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}'|eval "$selection")
+            dirs=$(echo "$dirs"|awk  '{for(i=3;i<NF;++i){printf("%s ", $i)}print $NF}')
           elif [[ "$mode" = ranking ]];then
-            dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}'|eval "$selection")
+            dirs=$(echo "$dirs"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
           fi
+        fi
+        if [[ "$selection" = "sentaku" ]];then
+          dir=$("$selection" -s line "$dirs")
         else
-         dir=$(for d in "${_SD_CL_DIRS[@]}";do echo "$d";done|eval "$selection")
+          dir=$(echo "$dirs"|eval "$selection")
         fi
       else
         local d

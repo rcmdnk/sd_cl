@@ -102,7 +102,9 @@ _sd_cl_cd_core () {
   eval builtin cd "$@"
   local ret=$?
   if [[ $ret -eq 0 ]];then
-    _sd_cl_post_cd
+    if type sed >& /dev/null && type grep >& /dev/null;then
+      _sd_cl_post_cd >&/dev/null
+    fi
   fi
   return $ret
 }

@@ -389,23 +389,17 @@ cl () {
     fi
     if [[ "$mode" = window && -n "$STY" ]];then
       _cl_get_dirs () {
-        local windows=$(screen -Q windows)
+        local windows=$(screen -Q windows '%n|'|sed 's/|/ /g')
         local ret=$?
         if [[ $ret -eq 0 ]];then
           local wininfo
-          local i=0
           local d
           _SD_CL_DIRS=()
           _sd_cl_check_file "$file"
           for wininfo in $windows;do
-            wininfo="${wininfo%\*}"
-            wininfo="${wininfo%-}"
-            if [ "$wininfo" = "$i" ];then
-              d=$(grep "^${wininfo} 0 " "$file")
-              if [[ -n "$d" ]];then
-                _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
-              fi
-              ((i++))
+            d=$(grep "^${wininfo} 0 " "$file")
+            if [[ -n "$d" ]];then
+              _SD_CL_DIRS=("${_SD_CL_DIRS[@]}" "$d")
             fi
           done
           for d in "${_SD_CL_DIRS[@]}";do

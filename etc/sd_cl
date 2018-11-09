@@ -319,7 +319,7 @@ cl () {
   local mode="lastdir"
   local cleardir=0
   local n=""
-  local dir=""
+  local dir_search=""
   local selection_tools="$SD_CL_TOOL"
 
   # Get arguments
@@ -343,16 +343,16 @@ cl () {
         echo "$help"
         return
         ;;
-      "--" ) shift; dir="$*"; break;;
+      "--" ) shift; dir_search="$*"; break;;
       -* )
         echo "Invalid argument: $1"
         return $_SD_CL_ERROR_INVALID_ARGUMENT
         ;;
       * )
-        if (($1+1)) >&/dev/null;then
+        if [[ "$1" =~ ^[0-9]+$ ]] >&/dev/null;then
           n=$1
         else
-          dir="$*"
+          dir_search="$*"
           break
         fi
         ;;
@@ -441,6 +441,7 @@ cl () {
   elif [[ "$mode" = vim ]];then
     _cl_get_dirs () {
       _SD_CL_DIRS=()
+      local d
       for d in *;do
         if [[ ! -d "$d" ]];then
           continue
@@ -464,9 +465,18 @@ cl () {
     return $ret
   fi
 
+  # Search dirs
+  local dirs_tmp=()
+  local d
+  for d in "${_SD_CL_DIRS[@]}";do
+    [[ -n "$dir_search" && ! "$d" =~ $dir_search ]] && continue
+    dirs_tmp=("${dirs_tmp[@]}" "$d")
+  done
+  _SD_CL_DIRS=("${dirs_tmp[@]}")
+
   # Check dirs
   if [[ "${#_SD_CL_DIRS[@]}" -eq 0 ]];then
-    echo "No directory is stored for $mode"
+    echo "No directory is found"
     return
   fi
 
@@ -513,19 +523,7 @@ cl () {
     return 0
   fi
 
-  # Cleanup list
-  local dirs_tmp=()
-  local d
-  for d in "${_SD_CL_DIRS[@]}";do
-    [[ -n "$dir" && ! "$d" =~ $dir ]] && continue
-    dirs_tmp=("${dirs_tmp[@]}" "$d")
-  done
-  if [[ "${#dirs_tmp[@]}" -eq 0 ]];then
-    echo "No such a directory is stored for $mode: ${dir}"
-    return $_SD_CL_ERROR_NOT_STORED
-  fi
-  _SD_CL_DIRS=("${dirs_tmp[@]}")
-
+  # Get n-th dir
   if [[ -n "$n" ]];then
     if ! ((n+1)) >&/dev/null || [[ "$n" -ge "${#_SD_CL_DIRS[@]}" ]];then
       echo "$n is not valid number."
@@ -535,6 +533,7 @@ cl () {
     _SD_CL_DIRS=("${_SD_CL_DIRS[$n]}")
   fi
 
+  # Get dir
   if [[ "${#_SD_CL_DIRS[@]}" -eq 1 && "$mode" != vim ]];then
     dir=${_SD_CL_DIRS[0]}
   else

@@ -552,9 +552,9 @@ cl () {
         break
       fi
     done
-    #if [[ "$selection" = "sentaku" ]];then
-    #  selection="sentaku -s line"
-    #fi
+    if [[ "$selection" = "sentaku" ]];then
+      selection="sentaku -s line"
+    fi
 
     while :;do
       if [[ -n "$selection" ]];then
@@ -566,11 +566,7 @@ cl () {
             dirs=$(echo "$dirs"|awk  '{for(i=2;i<NF;++i){printf("%s ", $i)}print $NF}')
           fi
         fi
-        if [[ "$selection" = "sentaku" ]];then
-          dir=$("$selection" -s line "$dirs")
-        else
-          dir=$(echo "$dirs"|eval "$selection")
-        fi
+        dir=$(echo "$dirs"|eval "$selection")
       else
         local d
         local i=$((${#_SD_CL_DIRS[@]}-1))

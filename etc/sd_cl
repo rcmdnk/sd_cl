@@ -99,7 +99,16 @@ _sd_cl_cd () {
 }
 
 _sd_cl_cd_core () {
-  eval builtin cd "$@"
+  local opt=()
+  local o
+  for o in "$@";do
+    if [[ "$o" =~ ~* ]];then
+      opt=("${opt[@]}" "${o/\~/$HOME}")
+    else
+      opt=("${opt[@]}" "$o")
+    fi
+  done
+  eval builtin "cd \"${opt[@]}\""
   local ret=$?
   if [[ $ret -eq 0 ]];then
     if type sed >& /dev/null && type grep >& /dev/null;then
